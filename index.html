@@ -30,9 +30,9 @@ input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 12px}
 .btn{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 13px;border-radius:10px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
 .btn.main{background:var(--sea);border-color:var(--sea);color:#fff}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:16px}.ph>*{z-index:1}.ph>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}.ph::after{content:"";position:absolute;inset:auto 0 0 0;height:55%;background:linear-gradient(transparent,rgba(0,0,0,.55));pointer-events:none}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
-.ph{height:120px;display:flex;align-items:flex-end;justify-content:space-between;padding:10px 14px;color:#fff;font-weight:800;position:relative}
+.ph{height:clamp(240px,60vw,320px);overflow:hidden;display:flex;align-items:flex-end;justify-content:space-between;padding:10px 14px;color:#fff;font-weight:800;position:relative}
 .fav{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.9);color:#c0392b;border:0;border-radius:50%;width:38px;height:38px;font-size:1.2rem;cursor:pointer}
 .bd{position:absolute;top:10px;left:10px;display:flex;gap:6px}
 .bd b{background:var(--sand);color:#2a1d00;font-size:.75rem;padding:3px 9px;border-radius:99px}
@@ -52,7 +52,7 @@ input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid
 .src span{overflow-wrap:anywhere;font-size:.88rem}
 .tot{font-size:1.6rem;font-weight:800;color:var(--sea)}
 svg text{fill:var(--ink);font-family:inherit}
-.nv{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);color:#fff;border:0;border-radius:50%;width:38px;height:38px;font-size:1.3rem;cursor:pointer}.cnt{position:absolute;bottom:8px;right:12px;background:rgba(0,0,0,.5);color:#fff;border-radius:99px;padding:1px 8px;font-size:.78rem}.ta{width:100%;margin-top:8px;font:inherit;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px}[hidden]{display:none!important}
+.nv{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);color:#fff;border:0;border-radius:50%;width:38px;height:38px;font-size:1.3rem;cursor:pointer}.cnt{position:absolute;bottom:8px;right:12px;background:rgba(0,0,0,.5);color:#fff;border-radius:99px;padding:1px 8px;font-size:.78rem}#lb{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:50;display:flex;align-items:center;justify-content:center}#lb img{max-width:100%;max-height:100%;object-fit:contain}#lb .nv{background:rgba(255,255,255,.25)}#lb .x{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:14px;background:rgba(255,255,255,.25);color:#fff;border:0;border-radius:50%;width:44px;height:44px;font-size:1.4rem;cursor:pointer}.ta{width:100%;margin-top:8px;font:inherit;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px}[hidden]{display:none!important}
 @media print{header,.tabs,.note,.noprint,.acts,.fav{display:none!important}body{background:#fff}.card{break-inside:avoid}}
 </style>
 </head>
@@ -153,6 +153,7 @@ svg text{fill:var(--ink);font-family:inherit}
 </section>
 </div>
 
+<div id="lb" hidden></div>
 <script>
 var X={
 title:"Алания: поиск квартир|Alanya: daire arama|Alanya property finder",
@@ -219,7 +220,7 @@ a.sort(function(x,y){return so==="1"?(x.p||1e12)-(y.p||1e12):so==="2"?y.p-x.p:so
 function card(x){
 var g=x.c.split(","),n=dn(x.d),fv=S.fav.indexOf(x.id)>-1,nt=S.nt[x.id]||{s:0,n:""},st=ta("st");
 var dv=Math.round((x.pm/avg[x.d]-1)*100),mk=!x.pm||dv===0||D.filter(function(y){return y.d===x.d}).length<2?"":(dv<0?'<span class="mk lo">'+t("below")+(-dv)+'%</span>':'<span class="mk hi">'+t("above")+dv+'%</span>');
-return '<article class="card"><div class="ph" style="background:'+(x.ph&&x.ph[0]?'url('+x.ph[PI[x.id]||0]+') center/cover':'linear-gradient(135deg,'+g[0]+','+g[1]+')')+'"><div class="bd">'+(x.nw?'<b>'+t("nw")+'</b>':'')+(x.old>x.p?'<b class="dn">'+t("dp")+'</b>':'')+'</div><span style="margin-top:auto">'+n+' · '+x.r+'</span><button class="fav" data-f="'+x.id+'" aria-pressed="'+fv+'">'+(fv?"♥":"♡")+'</button>'+nav(x)+'</div><div class="body">'+(x.t?'<b>'+x.t.replace(/</g,"&lt;")+'</b>':'')+'<div class="price">'+(x.p?money(x.p):t("ask"))+(x.old>x.p?'<span class="old">'+money(x.old)+'</span>':'')+'</div><div>'+t("ppm")+': <b>'+(x.pm?money(x.pm):"—")+'</b> '+mk+'</div><div class="kv"><div><span>'+t("sea")+'</span> '+(x.sea?x.sea+" m":"—")+'</div><div><span>'+t("fl")+'</span> '+(x.fl||"—")+'</div><div><span>'+t("age")+'</span> '+(x.age||"—")+(x.age?' '+t("yr"):'')+'</div><div><span>'+t("aid")+'</span> '+(x.aid?money(x.aid):"—")+'</div><div><span>'+t("sqm")+'</span> '+(x.m||"—")+'</div><div><span>'+t("deed")+'</span> '+t(x.dd==="t"?"tapu":"proj")+'</div></div><span class="pill">'+t(x.o==="o"?"own":"agt")+'</span>'+(x.tp==="v"?'<span class="pill">'+t("tpv")+'</span>':'')+who(x)+(x.ag.length>1?'<div class="ags">'+t("ags")+x.ag.map(function(a){return a[0]+" "+money(a[1])}).join(" · ")+'</div>':'')+'<div class="noprint"><select data-s="'+x.id+'">'+st.map(function(s,i){return '<option value="'+i+'"'+(i==nt.s?" selected":"")+'>'+s+'</option>'}).join("")+'</select><input style="margin-top:6px" data-n="'+x.id+'" placeholder="'+t("nt")+'" value="'+nt.n.replace(/"/g,"&quot;")+'"></div>'+acts(x)+'</div></article>'}
+return '<article class="card"><div class="ph" data-id="'+x.id+'" style="background:linear-gradient(135deg,'+g[0]+','+g[1]+')">'+pic(x)+'<div class="bd">'+(x.nw?'<b>'+t("nw")+'</b>':'')+(x.old>x.p?'<b class="dn">'+t("dp")+'</b>':'')+'</div><span style="margin-top:auto">'+n+' · '+x.r+'</span><button class="fav" data-f="'+x.id+'" aria-pressed="'+fv+'">'+(fv?"♥":"♡")+'</button>'+nav(x)+'</div><div class="body">'+(x.t?'<b>'+x.t.replace(/</g,"&lt;")+'</b>':'')+'<div class="price">'+(x.p?money(x.p):t("ask"))+(x.old>x.p?'<span class="old">'+money(x.old)+'</span>':'')+'</div><div>'+t("ppm")+': <b>'+(x.pm?money(x.pm):"—")+'</b> '+mk+'</div><div class="kv"><div><span>'+t("sea")+'</span> '+(x.sea?x.sea+" m":"—")+'</div><div><span>'+t("fl")+'</span> '+(x.fl||"—")+'</div><div><span>'+t("age")+'</span> '+(x.age||"—")+(x.age?' '+t("yr"):'')+'</div><div><span>'+t("aid")+'</span> '+(x.aid?money(x.aid):"—")+'</div><div><span>'+t("sqm")+'</span> '+(x.m||"—")+'</div><div><span>'+t("deed")+'</span> '+t(x.dd==="t"?"tapu":"proj")+'</div></div><span class="pill">'+t(x.o==="o"?"own":"agt")+'</span>'+(x.tp==="v"?'<span class="pill">'+t("tpv")+'</span>':'')+who(x)+(x.ag.length>1?'<div class="ags">'+t("ags")+x.ag.map(function(a){return a[0]+" "+money(a[1])}).join(" · ")+'</div>':'')+'<div class="noprint"><select data-s="'+x.id+'">'+st.map(function(s,i){return '<option value="'+i+'"'+(i==nt.s?" selected":"")+'>'+s+'</option>'}).join("")+'</select><input style="margin-top:6px" data-n="'+x.id+'" placeholder="'+t("nt")+'" value="'+nt.n.replace(/"/g,"&quot;")+'"></div>'+acts(x)+'</div></article>'}
 function opts(el,arr,cur){$(el).innerHTML=arr.map(function(a){return '<option value="'+a[0]+'">'+a[1]+'</option>'}).join("");$(el).value=cur||""}
 function labels(){
 document.documentElement.lang=L;document.title=t("title");$("h1").textContent=t("title");$("tag").textContent=t("tag");$("note").textContent=t("note");
@@ -321,7 +322,7 @@ function dists(){var a=['Mahmutlar','Kestel','Oba','Tosmur','Avsallar','cen'];D.
 function acts(x){var tl=x.tel||'',h='';
 if(tl)h+='<a class="btn main" href="tel:'+tl+'">'+t('call')+'</a><a class="btn" href="https://wa.me/'+tl.replace('+','')+'" target="_blank" rel="noopener">WhatsApp</a>';
 if(/^https?:\/\//.test(x.url||''))h+='<a class="btn" href="'+encodeURI(x.url)+'" target="_blank" rel="noopener">'+t('src')+'</a>';
-if(x.my)h+='<button class="btn noprint" data-ed="'+x.id+'">'+t('edit')+'</button><button class="btn noprint" data-dl="'+x.id+'">'+t('del')+'</button>';
+h+='<button class="btn" data-sh="'+x.id+'">'+t('shr')+'</button>';if(x.my)h+='<button class="btn noprint" data-ed="'+x.id+'">'+t('edit')+'</button><button class="btn noprint" data-dl="'+x.id+'">'+t('del')+'</button>';
 return h?'<div class="acts">'+h+'</div>':''}
 function key(x){return [x.d,x.r,x.m,x.fl].join('|')}
 function addL(o){var k=key(o),e=o.m?S.ls.filter(function(x){return key(x)===k})[0]:0;
@@ -372,12 +373,39 @@ else if(q.dl){S.ls=S.ls.filter(function(z){return z.id!=q.dl});S.fav=S.fav.filte
 Object.assign(X,{tpl:'Тип|Tür|Type',tpa:'Квартира|Daire|Apartment',tpv:'Вилла|Villa|Villa',ask:'Цена по запросу|Fiyat için arayın|Price on request',notel:'Телефон не указан|Telefon yok|No phone yet'});
 var PI={};
 function nav(x){return x.ph&&x.ph.length>1?'<button class="nv" style="left:8px" data-pv="'+x.id+',-1">‹</button><button class="nv" style="right:8px" data-pv="'+x.id+',1">›</button><span class="cnt">'+((PI[x.id]||0)+1)+'/'+x.ph.length+'</span>':''}
-function who(x){return x.tel?'<div><b>'+t(x.o==="o"?"own":"agt")+':</b> '+x.ag[0][0].replace(/</g,"&lt;")+' · <a href="tel:'+x.tel+'">'+x.tel+'</a></div>':'<div class="meta">'+t("notel")+'</div>'}
+function who(x){return x.tel?'<div><b>'+t(x.o==="o"?"own":"agt")+':</b> '+x.ag[0][0].replace(/</g,"&lt;")+' · <a href="tel:'+x.tel+'">'+x.tel+'</a></div>':'<div class="meta">'+t("notel")+(/^https?:\/\//.test(x.url||'')?' · <a href="'+encodeURI(x.url)+'" target="_blank" rel="noopener">'+t("src")+'</a>':'')+'</div>'}
 function step(id,d){var x=D.filter(function(z){return z.id==id})[0];if(!x||!x.ph)return;PI[id]=((PI[id]||0)+d+x.ph.length)%x.ph.length;view()}
 var tx0=0;
 document.addEventListener('touchstart',function(e){tx0=e.touches[0].clientX},{passive:true});
 document.addEventListener('touchend',function(e){var p=e.target.closest&&e.target.closest('.ph'),b=p&&p.querySelector('[data-pv]');if(!b)return;var dx=e.changedTouches[0].clientX-tx0;if(Math.abs(dx)>50)step(b.dataset.pv.split(',')[0],dx<0?1:-1)},{passive:true});
 document.addEventListener('click',function(e){var b=e.target.closest('button');if(b&&b.dataset.pv){var a=b.dataset.pv.split(',');step(a[0],+a[1])}});
+Object.assign(X,{shr:'Поделиться|Paylaş|Share',
+srh:'Ссылки, добавленные здесь, сохраняются только на этом устройстве. Чтобы источник собирался автоматически и был виден везде, добавьте показанную после ввода строку в файл sources.json на GitHub или перешлите ссылку мне.|Burada eklenen bağlantılar yalnızca bu cihazda saklanır. Kaynağın otomatik toplanması ve her yerde görünmesi için gösterilen satırı GitHub’daki sources.json dosyasına ekleyin.|Links added here are saved on this device only. To have a source collected automatically and visible everywhere, add the line shown after you paste it to sources.json on GitHub.',
+srl:'Строка для sources.json (скопирована; если она последняя в списке, уберите запятую в конце): |sources.json satırı (kopyalandı; listenin sonundaysa sondaki virgülü silin): |Line for sources.json (copied; if it is the last in the list, remove the trailing comma): '});
+var LB={id:0,i:0};
+function lbShow(){var x=D.filter(function(z){return z.id==LB.id})[0],el=$('lb');if(!x||!x.ph||!x.ph.length){el.hidden=true;return}
+el.innerHTML='<img src="'+pu(x.ph[LB.i],1600)[0]+'" referrerpolicy="no-referrer" alt="" data-alt="'+pu(x.ph[LB.i],1600)[1]+'"><button class="x" data-lx="1">×</button>'+(x.ph.length>1?'<button class="nv" style="left:8px" data-lb="-1">‹</button><button class="nv" style="right:8px" data-lb="1">›</button>':'');el.hidden=false}
+function lbStep(d){var x=D.filter(function(z){return z.id==LB.id})[0];if(!x)return;LB.i=(LB.i+d+x.ph.length)%x.ph.length;lbShow()}
+function share(id,btn){var x=D.filter(function(z){return z.id==id})[0];if(!x)return;
+var s=[x.t||(dn(x.d)+' '+x.r),x.m?x.m+' m²':'',x.p?money(x.p):'',x.tel?(x.ag[0][0]+' '+x.tel):''].filter(Boolean).join(' · '),u=/^https?:\/\//.test(x.url||'')?x.url:location.href;
+if(navigator.share){navigator.share({title:t('title'),text:s,url:u}).catch(function(){})}
+else if(navigator.clipboard){navigator.clipboard.writeText(s+'\n'+u).then(function(){var o=btn.textContent;btn.textContent=t('copied');setTimeout(function(){btn.textContent=o},1500)})}}
+document.addEventListener('click',function(e){var p=e.target.closest('.ph'),b=e.target.closest('button');
+if(p&&!b){var x=D.filter(function(z){return z.id==p.dataset.id})[0];if(x&&x.ph&&x.ph.length){LB.id=x.id;LB.i=PI[x.id]||0;lbShow()}return}
+if(b&&b.dataset.lb){lbStep(+b.dataset.lb);return}
+if((b&&b.dataset.lx)||e.target.id==='lb'){$('lb').hidden=true}
+if(b&&b.dataset.sh){share(b.dataset.sh,b)}});
+document.addEventListener('keydown',function(e){if($('lb').hidden)return;if(e.key==='Escape')$('lb').hidden=true;if(e.key==='ArrowRight')lbStep(1);if(e.key==='ArrowLeft')lbStep(-1)});
+document.addEventListener('touchend',function(e){if($('lb').hidden||!e.target.closest('#lb'))return;var dx=e.changedTouches[0].clientX-tx0;if(Math.abs(dx)>50)lbStep(dx<0?1:-1)},{passive:true});
+$('s-add').onclick=function(){var v=$('s-in').value.trim(),er=$('s-err');
+if(!/^https?:\/\/\S+\.\S+/.test(v)){er.style.color='var(--bad)';er.textContent=t('bad');er.hidden=false;return}
+if(S.src.indexOf(v)<0)S.src.push(v);$('s-in').value='';save();srcs();
+var ln='{"name": "New source", "type": "'+kind(v)+'", "url": "'+v+'", "tel": ""},';
+if(navigator.clipboard)navigator.clipboard.writeText(ln).catch(function(){});
+er.style.color='var(--ink)';er.textContent=t('srl')+ln;er.hidden=false};
+function pu(u,w){var m=u.match(/id=([\w-]+)/);return m?['https://lh3.googleusercontent.com/d/'+m[1]+'=w'+w,'https://drive.google.com/thumbnail?id='+m[1]+'&sz=w'+w]:[u,'']}
+function pic(x){if(!x.ph||!x.ph.length)return '';var a=pu(x.ph[PI[x.id]||0],480);return '<img src="'+a[0]+'" loading="lazy" decoding="async" referrerpolicy="no-referrer" alt="" data-alt="'+a[1]+'">'}
+document.addEventListener('error',function(e){var i=e.target;if(!i||i.tagName!=='IMG')return;if(i.dataset.alt){i.src=i.dataset.alt;i.dataset.alt=''}else if(i.closest('.ph'))i.remove()},true);
 labels();
 fetch('data/listings.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
 if(!j||!j.listings)return;AUTO=j.listings;X.note=X.note.split('|').map(function(s){return s+' · '+j.updated}).join('|');prep();labels()}).catch(function(){});
