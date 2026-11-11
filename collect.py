@@ -13,8 +13,8 @@ KD = ["Mahmutlar", "Kestel", "Oba", "Tosmur", "Cikcilli", "Çıkcılı", "Kargic
       "Demirtaş", "Avsallar", "Konaklı", "Payallar", "Türkler", "Okurcalar", "Merkez", "Center", "Alanya"]
 PAL = ["#0e5c7a,#14a3a0", "#1c6e5c,#7bc47f", "#254a73,#4b8fc4", "#5b3f8c,#b37fd1", "#7a4a1e,#e0a458", "#8a2f4a,#e2778f"]
 IMG = (".jpg", ".jpeg", ".png", ".webp")
-PRICE = re.compile(r"(\d{1,3}(?:[ .,]\d{3})+|\d{4,7})\s*(?:€|euro|eur)", re.I)
-PRICE2 = re.compile(r"(?:€|euro|eur)\s*(\d{1,3}(?:[ .,]\d{3})+|\d{4,7})", re.I)
+PRICE = re.compile(r"(?<![\d+])(\d{1,3}(?:[ .,]\d{3})+|\d{4,7})\s*(?:€|euro|eur)", re.I)
+PRICE2 = re.compile(r"(?:€|euro|eur)\s*(?<![\d+])(\d{1,3}(?:[ .,]\d{3})+|\d{4,7})", re.I)
 
 
 def get(url, tries=2):
@@ -58,12 +58,12 @@ def norm_tel(p):
     return p if p[0] == "+" else "+" + p
 
 
-def parse_line(l, room):
+def parse_line(l, room, need_price=True):
     m = PRICE.search(l) or PRICE2.search(l)
-    if not m:
-        return None
-    p = int(re.sub(r"\D", "", m.group(1)))
-    if p < 5000 or p > 5_000_000:
+    p = int(re.sub(r"\D", "", m.group(1))) if m else 0
+    if p and (p < 5000 or p > 5_000_000):
+        p = 0
+    if need_price and not p:
         return None
     rm = re.search(r"(\d\+\d)", l)
     ar = re.search(r"(\d{2,3})\s*(?:m2|m²|metre)", l, re.I)
@@ -78,13 +78,15 @@ def parse_line(l, room):
     return {"p": p, "d": d or "Alanya", "r": rm.group(1) if rm else room,
             "m": int(ar.group(1)) if ar else 0, "fl": int(fl.group(1)) if fl else 0,
             "dd": "p" if re.search(r"proje|off.?plan|inşaat", l, re.I) else "t",
-            "o": "o" if re.search(r"sahibinden|owner|владел|хозяин", l, re.I) else "a"}
+            "o": "o" if re.search(r"sahibinden|owner|владел|хозяин", l, re.I) else "a",
+            "tp": "v" if re.search(r"villa|vila\b|müstakil|mustakil|вилла", l, re.I) else "a"}
 
 
-def mk(src, agency, tel, x, ref, url="", ph=None):
+def mk(src, agency, tel, x, ref, url="", ph=None, title=""):
     return {"d": x["d"], "r": x["r"], "m": x["m"], "sea": 0, "fl": x["fl"], "age": 0, "aid": 0,
             "dd": x["dd"], "o": x["o"], "nw": 0, "old": 0, "ag": [[agency, x["p"]]], "tel": tel,
-            "url": url, "ph": ph or [], "src": src, "ref": ref}
+            "url": url, "ph": ph or [], "src": src, "ref": ref,
+            "tp": x.get("tp", "a"), "t": title}
 
 
 def parse_text(text, src, agency, tel, url=""):
@@ -121,27 +123,22 @@ def collect_drive(s):
     out, seen = [], set()
     fid = re.search(r"/folders/([\w-]+)", s["url"]).group(1)
 
-    def walk(f, depth):
+    def walk(f, depth, trail):
         items = drive_list(f)
         time.sleep(0.4)
-        print("  folder", f, "->", len(items), "entries")
+        print("  folder", f, "->", len(items), "entries |", " / ".join(trail)[:70])
+        imgs = ["https://drive.google.com/thumbnail?id=" + i + "&sz=w800"
+                for i, n, fo in items if not fo and n.lower().endswith(IMG)][:5]
+        if trail and imgs:  # a folder with photos = one property
+            x = parse_line(" / ".join(reversed(trail)), "", False)
+            out.append(mk(s["name"], s["name"], s.get("tel", ""), x, "drive:" + f,
+                          "https://drive.google.com/drive/folders/" + f, imgs, " / ".join(trail[-2:])))
         for eid, name, isf in items:
-            if not isf or eid in seen or len(seen) > 300:
-                continue
-            seen.add(eid)
-            x = parse_line(name, "")
-            if x:
-                photos = []
-                for pid, pname, pf in drive_list(eid):
-                    if not pf and pname.lower().endswith(IMG) and len(photos) < 3:
-                        photos.append("https://drive.google.com/thumbnail?id=" + pid + "&sz=w800")
-                time.sleep(0.4)
-                out.append(mk(s["name"], s["name"], s.get("tel", ""), x, "drive:" + eid,
-                              "https://drive.google.com/drive/folders/" + eid, photos))
-            elif depth < 2:
-                walk(eid, depth + 1)
+            if isf and eid not in seen and len(seen) < 400 and depth < 4:
+                seen.add(eid)
+                walk(eid, depth + 1, trail + [name])
 
-    walk(fid, 0)
+    walk(fid, 0, [])
     return out
 
 
