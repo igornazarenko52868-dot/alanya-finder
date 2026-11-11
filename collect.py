@@ -14,6 +14,10 @@ KD = ["Mahmutlar", "Kestel", "Oba", "Tosmur", "Cikcilli", "Çıkcılı", "Kargic
 PAL = ["#0e5c7a,#14a3a0", "#1c6e5c,#7bc47f", "#254a73,#4b8fc4", "#5b3f8c,#b37fd1", "#7a4a1e,#e0a458", "#8a2f4a,#e2778f"]
 IMG = (".jpg", ".jpeg", ".png", ".webp")
 PRICE = re.compile(r"(?<![\d+])(\d{1,3}(?:[ .,]\d{3})+|\d{4,7})\s*(?:€|euro|eur)", re.I)
+# Rate used to convert prices written in Turkish lira (TL). Change it when the rate moves.
+TRY_PER_EUR = 56
+PRICE_TL = re.compile(r"(?<![\d+])(\d{1,3}(?:[ .,]\d{3})+|\d{4,9})\s*(?:₺|tl\b|try\b|lira)", re.I)
+RENT = re.compile(r"kiral[ıi]k|\brent|аренд|/\s*ay\b|ayl[ıi]k|per month|monthly|в месяц", re.I)
 PRICE2 = re.compile(r"(?:€|euro|eur)\s*(?<![\d+])(\d{1,3}(?:[ .,]\d{3})+|\d{4,7})", re.I)
 
 
@@ -61,7 +65,16 @@ def norm_tel(p):
 def parse_line(l, room, need_price=True):
     m = PRICE.search(l) or PRICE2.search(l)
     p = int(re.sub(r"\D", "", m.group(1))) if m else 0
-    if p and (p < 5000 or p > 5_000_000):
+    tl = 0
+    if not m:
+        mt = PRICE_TL.search(l)
+        if mt:
+            tl = int(re.sub(r"\D", "", mt.group(1)))
+            p = round(tl / TRY_PER_EUR / 100) * 100
+    # small amounts or rent words = monthly rent, not a sale price
+    small = (not m) and bool(re.search(r"(?<![\d+.,])\d{2,4}\s*(?:€|euro|eur)\b", l, re.I))
+    rent = bool(RENT.search(l)) or small or (m is not None and 0 < p < 5000) or (0 < tl < 200000)
+    if rent or (p and (p < 5000 or p > 5_000_000)):
         p = 0
     if need_price and not p:
         return None
@@ -79,14 +92,15 @@ def parse_line(l, room, need_price=True):
             "m": int(ar.group(1)) if ar else 0, "fl": int(fl.group(1)) if fl else 0,
             "dd": "p" if re.search(r"proje|off.?plan|inşaat", l, re.I) else "t",
             "o": "o" if re.search(r"sahibinden|owner|владел|хозяин", l, re.I) else "a",
-            "tp": "v" if re.search(r"villa|vila\b|müstakil|mustakil|вилла", l, re.I) else "a"}
+            "tp": "v" if re.search(r"villa|vila\b|müstakil|mustakil|вилла", l, re.I) else "a",
+            "rent": rent, "tl": tl if p else 0}
 
 
 def mk(src, agency, tel, x, ref, url="", ph=None, title=""):
     return {"d": x["d"], "r": x["r"], "m": x["m"], "sea": 0, "fl": x["fl"], "age": 0, "aid": 0,
             "dd": x["dd"], "o": x["o"], "nw": 0, "old": 0, "ag": [[agency, x["p"]]], "tel": tel,
             "url": url, "ph": ph or [], "src": src, "ref": ref,
-            "tp": x.get("tp", "a"), "t": title}
+            "tp": x.get("tp", "a"), "t": title, "tl": x.get("tl", 0)}
 
 
 def parse_text(text, src, agency, tel, url=""):
@@ -131,7 +145,10 @@ def collect_drive(s):
                 for i, n, fo in items if not fo and n.lower().endswith(IMG)][:5]
         if trail and imgs:  # a folder with photos = one property
             x = parse_line(" / ".join(reversed(trail)), "", False)
-            out.append(mk(s["name"], s["name"], s.get("tel", ""), x, "drive:" + f,
+            if x["rent"]:
+                print("    skipped (rent):", " / ".join(trail[-2:])[:60])
+            else:
+              out.append(mk(s["name"], s["name"], s.get("tel", ""), x, "drive:" + f,
                           "https://drive.google.com/drive/folders/" + f, imgs, " / ".join(trail[-2:])))
         for eid, name, isf in items:
             if isf and eid not in seen and len(seen) < 400 and depth < 4:
