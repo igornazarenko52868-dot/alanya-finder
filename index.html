@@ -52,7 +52,7 @@ input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid
 .src span{overflow-wrap:anywhere;font-size:.88rem}
 .tot{font-size:1.6rem;font-weight:800;color:var(--sea)}
 svg text{fill:var(--ink);font-family:inherit}
-.nv{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);color:#fff;border:0;border-radius:50%;width:38px;height:38px;font-size:1.3rem;cursor:pointer}.cnt{position:absolute;bottom:8px;right:12px;background:rgba(0,0,0,.5);color:#fff;border-radius:99px;padding:1px 8px;font-size:.78rem}#lb{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:50;display:flex;align-items:center;justify-content:center}#lb img{max-width:100%;max-height:100%;object-fit:contain}#lb .nv{background:rgba(255,255,255,.25)}#lb .x{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:14px;background:rgba(255,255,255,.25);color:#fff;border:0;border-radius:50%;width:44px;height:44px;font-size:1.4rem;cursor:pointer}.ta{width:100%;margin-top:8px;font:inherit;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px}[hidden]{display:none!important}
+.nv{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.5);color:#fff;border:0;border-radius:50%;width:38px;height:38px;font-size:1.3rem;cursor:pointer}.cnt{position:absolute;bottom:8px;right:12px;background:rgba(0,0,0,.5);color:#fff;border-radius:99px;padding:1px 8px;font-size:.78rem}#lb{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:50;display:flex;align-items:center;justify-content:center}#lb img{max-width:100%;max-height:100%;object-fit:contain}#lb .nv{background:rgba(255,255,255,.25)}#lb .x{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:14px;background:rgba(255,255,255,.25);color:#fff;border:0;border-radius:50%;width:44px;height:44px;font-size:1.4rem;cursor:pointer}#pk .noprint{display:none}.ta{width:100%;margin-top:8px;font:inherit;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px}[hidden]{display:none!important}
 @media print{header,.tabs,.note,.noprint,.acts,.fav{display:none!important}body{background:#fff}.card{break-inside:avoid}}
 </style>
 </head>
@@ -88,6 +88,8 @@ svg text{fill:var(--ink);font-family:inherit}
 <div class="panel noprint"><div class="row">
 <label><span data-t="agn"></span><input id="a-name"></label>
 <label><span data-t="agp"></span><input id="a-phone" inputmode="tel"></label>
+<label><span data-t="komp"></span><input id="k-p" type="number" step="0.5" inputmode="decimal"></label>
+<label><span data-t="komf"></span><input id="k-f" type="number" step="100" inputmode="numeric"></label>
 <button class="btn main" id="pr"></button><button class="btn" id="cp"></button>
 </div><p class="meta" data-t="pickh"></p></div>
 <h2 id="pk-h" style="margin:4px 0"></h2>
@@ -221,7 +223,7 @@ a.sort(function(x,y){return so==="1"?(x.p||1e12)-(y.p||1e12):so==="2"?y.p-x.p:so
 function card(x){
 var g=x.c.split(","),n=dn(x.d),fv=S.fav.indexOf(x.id)>-1,nt=S.nt[x.id]||{s:0,n:""},st=ta("st");
 var dv=Math.round((x.pm/avg[x.d]-1)*100),mk=!x.pm||dv===0||D.filter(function(y){return y.d===x.d}).length<2?"":(dv<0?'<span class="mk lo">'+t("below")+(-dv)+'%</span>':'<span class="mk hi">'+t("above")+dv+'%</span>');
-return '<article class="card"><div class="ph" data-id="'+x.id+'" style="background:linear-gradient(135deg,'+g[0]+','+g[1]+')">'+pic(x)+'<div class="bd">'+(x.nw?'<b>'+t("nw")+'</b>':'')+(x.old>x.p?'<b class="dn">'+t("dp")+'</b>':'')+'</div><span style="margin-top:auto">'+n+' · '+x.r+'</span><button class="fav" data-f="'+x.id+'" aria-pressed="'+fv+'">'+(fv?"♥":"♡")+'</button>'+nav(x)+'</div><div class="body">'+(x.t?'<b>'+x.t.replace(/</g,"&lt;")+'</b>':'')+'<div class="price">'+(x.p?money(x.p):t("ask"))+(x.tl?'<span class="old" style="text-decoration:none">≈ '+x.tl.toLocaleString("tr-TR")+' ₺</span>':'')+(x.old>x.p?'<span class="old">'+money(x.old)+'</span>':'')+'</div><div>'+t("ppm")+': <b>'+(x.pm?money(x.pm):"—")+'</b> '+mk+'</div><div class="kv"><div><span>'+t("sea")+'</span> '+(x.sea?x.sea+" m":"—")+'</div><div><span>'+t("fl")+'</span> '+(x.fl||"—")+'</div><div><span>'+t("age")+'</span> '+(x.age||"—")+(x.age?' '+t("yr"):'')+'</div><div><span>'+t("aid")+'</span> '+(x.aid?money(x.aid):"—")+'</div><div><span>'+t("sqm")+'</span> '+(x.m||"—")+'</div><div><span>'+t("deed")+'</span> '+t(x.dd==="t"?"tapu":"proj")+'</div></div><span class="pill">'+t(x.o==="o"?"own":"agt")+'</span>'+(x.tp==="v"?'<span class="pill">'+t("tpv")+'</span>':'')+who(x)+(x.ag.length>1?'<div class="ags">'+t("ags")+x.ag.map(function(a){return a[0]+" "+money(a[1])}).join(" · ")+'</div>':'')+'<div class="noprint"><select data-s="'+x.id+'">'+st.map(function(s,i){return '<option value="'+i+'"'+(i==nt.s?" selected":"")+'>'+s+'</option>'}).join("")+'</select><input style="margin-top:6px" data-n="'+x.id+'" placeholder="'+t("nt")+'" value="'+nt.n.replace(/"/g,"&quot;")+'"></div>'+acts(x)+'</div></article>'}
+return '<article class="card"><div class="ph" data-id="'+x.id+'" style="background:linear-gradient(135deg,'+g[0]+','+g[1]+')">'+pic(x)+'<div class="bd">'+(x.nw?'<b>'+t("nw")+'</b>':'')+(x.old>x.p?'<b class="dn">'+t("dp")+'</b>':'')+'</div><span style="margin-top:auto">'+n+' · '+x.r+'</span><button class="fav" data-f="'+x.id+'" aria-pressed="'+fv+'">'+(fv?"♥":"♡")+'</button>'+nav(x)+'</div><div class="body">'+(x.t?'<b>'+x.t.replace(/</g,"&lt;")+'</b>':'')+'<div class="price">'+(x.p?money(x.p):t("ask"))+(x.tl?'<span class="old" style="text-decoration:none">≈ '+x.tl.toLocaleString("tr-TR")+' ₺</span>':'')+(x.old>x.p?'<span class="old">'+money(x.old)+'</span>':'')+'</div>'+ckl(x)+'<div>'+t("ppm")+': <b>'+(x.pm?money(x.pm):"—")+'</b> '+mk+'</div><div class="kv"><div><span>'+t("sea")+'</span> '+(x.sea?x.sea+" m":"—")+'</div><div><span>'+t("fl")+'</span> '+(x.fl||"—")+'</div><div><span>'+t("age")+'</span> '+(x.age||"—")+(x.age?' '+t("yr"):'')+'</div><div><span>'+t("aid")+'</span> '+(x.aid?money(x.aid):"—")+'</div><div><span>'+t("sqm")+'</span> '+(x.m||"—")+'</div><div><span>'+t("deed")+'</span> '+t(x.dd==="t"?"tapu":"proj")+'</div></div><span class="pill">'+t(x.o==="o"?"own":"agt")+'</span>'+(x.tp==="v"?'<span class="pill">'+t("tpv")+'</span>':'')+who(x)+(x.ag.length>1?'<div class="ags">'+t("ags")+x.ag.map(function(a){return a[0]+" "+money(a[1])}).join(" · ")+'</div>':'')+'<div class="noprint"><select data-s="'+x.id+'">'+st.map(function(s,i){return '<option value="'+i+'"'+(i==nt.s?" selected":"")+'>'+s+'</option>'}).join("")+'</select><input style="margin-top:6px" data-n="'+x.id+'" placeholder="'+t("nt")+'" value="'+nt.n.replace(/"/g,"&quot;")+'"></div>'+acts(x)+'</div></article>'}
 function opts(el,arr,cur){$(el).innerHTML=arr.map(function(a){return '<option value="'+a[0]+'">'+a[1]+'</option>'}).join("");$(el).value=cur||""}
 function labels(){
 document.documentElement.lang=L;document.title=t("title");$("h1").textContent=t("title");$("tag").textContent=t("tag");$("note").textContent=t("note");
@@ -244,7 +246,7 @@ var a=list();$("count").textContent=t("found")+a.length;
 $("grid").innerHTML=a.length?a.map(card).join(""):'<div class="empty">'+t("none")+'</div>';
 var pk=D.filter(function(x){return S.fav.indexOf(x.id)>-1});
 $("pk-h").textContent=t("pk")+(S.ag.n?" · "+S.ag.n:"")+(S.ag.p?" · "+S.ag.p:"");
-$("pk").innerHTML=pk.length?pk.map(card).join(""):'<div class="empty">'+t("pke")+'</div>';
+$("pk").innerHTML=pk.length?pk.map(function(x){return card(cv(x))}).join(""):'<div class="empty">'+t("pke")+'</div>';
 map();calc();alerts();srcs();mine()}
 function map(){
 var ds=dists(),pos={};ds.forEach(function(d,i){pos[d]=[50+i*(540/Math.max(ds.length-1,1)),90+(i%2)*30]});var h='<path d="M0 150 Q160 140 320 150 T640 140 L640 260 L0 260Z" fill="color-mix(in srgb,var(--sea2) 25%,var(--card))"/><text x="320" y="225" text-anchor="middle" font-size="16" font-weight="800">'+t("sea_l")+'</text>';
@@ -408,6 +410,20 @@ function pu(u,w){var m=u.match(/id=([\w-]+)/);return m?['https://lh3.googleuserc
 function pic(x){if(!x.ph||!x.ph.length)return '';var a=pu(x.ph[PI[x.id]||0],480);return '<img src="'+a[0]+'" loading="lazy" decoding="async" referrerpolicy="no-referrer" alt="" data-alt="'+a[1]+'">'}
 document.addEventListener('error',function(e){var i=e.target;if(!i||i.tagName!=='IMG')return;if(i.dataset.alt){i.src=i.dataset.alt;i.dataset.alt=''}else if(i.closest('.ph'))i.remove()},true);
 Object.assign(X,{npl:'Показывать без цены|Fiyatsızları göster|Show without price'});
+S.k=S.k||{p:0,f:0};
+Object.assign(X,{ckl:'Цена с комиссией|Komisyonlu fiyat|Price with commission',komp:'Комиссия, %|Komisyon, %|Commission, %',komf:'Комиссия, фикс. €|Sabit komisyon, €|Fixed commission, €',
+pickh:'Подборка показывается клиенту: цена с вашей комиссией и ваши контакты, без данных агентства и без ссылок на Google Диск. Отметьте объекты сердечком в поиске.|Seçki müşteriye gösterilir: komisyonlu fiyat ve sizin iletişim bilgileriniz; ofis bilgisi ve Google Drive bağlantısı yok. Aramada kalple işaretleyin.|The picks view is for your client: price with your commission and your contacts, no agency details or Google Drive links. Tap the heart in search to add objects.'});
+function cp(x){var k=S.k||{};return x.p?Math.round(x.p*(1+(+k.p||0)/100)+(+k.f||0)):0}
+function cv(x){var y=Object.assign({},x);y.cl=1;y.p=cp(x);y.ag=[[S.ag.n||'',y.p]];y.o='a';y.tel=ntel(S.ag.p);y.url='';y.old=0;y.pm=0;y.my=0;
+y.t=(x.t||'').replace(/\d[\d.,\s]*\s*(?:€|euro|eur|tl\b|₺|try\b|lira)/ig,'').replace(/[_\s\/]+/g,' ').trim();return y}
+function ckl(x){var k=S.k||{};return !x.cl&&x.p&&(+k.p||+k.f)?'<div class="meta">'+t('ckl')+': <b>'+money(cp(x))+'</b></div>':''}
+function txt(x){var y=cv(x);return [y.t||(dn(y.d)+' '+y.r),y.r,y.m?y.m+' m²':'',y.p?money(y.p):''].filter(Boolean).join(', ')}
+function share(id,btn){var x=D.filter(function(z){return z.id==id})[0];if(!x)return;var y=cv(x);
+var s=[y.t||(dn(y.d)+' '+y.r),y.m?y.m+' m²':'',y.p?money(y.p):'',y.tel?((S.ag.n||'')+' '+y.tel).trim():''].filter(Boolean).join(' · ');
+if(navigator.share){navigator.share({title:t('title'),text:s}).catch(function(){})}
+else if(navigator.clipboard){navigator.clipboard.writeText(s).then(function(){var o=btn.textContent;btn.textContent=t('copied');setTimeout(function(){btn.textContent=o},1500)})}}
+$('k-p').value=S.k.p||'';$('k-f').value=S.k.f||'';
+['k-p','k-f'].forEach(function(i){$(i).addEventListener('input',function(){S.k={p:+$('k-p').value||0,f:+$('k-f').value||0};save();view()})});
 labels();
 fetch('data/listings.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
 if(!j||!j.listings)return;AUTO=j.listings;X.note=X.note.split('|').map(function(s){return s+' · '+j.updated}).join('|');prep();labels()}).catch(function(){});
