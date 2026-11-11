@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Alanya Finder</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f6f7;--card:#fff;--ink:#0d2b3e;--mute:#5b7280;--line:#d6e2e6;--sea:#0e5c7a;--sea2:#14a3a0;--sand:#f0c776;--ok:#1b8a5a;--bad:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1a24;--card:#12293a;--ink:#e6f1f5;--mute:#93aab6;--line:#234257;--sea:#3fb4d6;--sea2:#2fc4bf;--ok:#4cc38a;--bad:#ff8a7a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+h1{margin:0;font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
+.tag,.meta{color:var(--mute);font-size:.9rem;margin:2px 0}
+.seg{display:flex;background:var(--card);border:2px solid var(--sea);border-radius:14px;padding:3px;gap:3px}
+.seg button{font:inherit;font-weight:800;border:0;background:transparent;color:var(--sea);padding:10px 14px;border-radius:11px;cursor:pointer;min-width:56px}
+.seg button[aria-pressed="true"]{background:var(--sea);color:#fff}
+.tools{display:flex;gap:10px;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;margin:12px 0;overflow-x:auto}
+.tabs button{font:inherit;font-weight:600;flex:none;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.tabs button[aria-selected="true"]{border-color:var(--sea2);box-shadow:inset 0 -3px 0 var(--sea2)}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--sand);outline-offset:2px}
+.note{background:color-mix(in srgb,var(--sand) 30%,var(--card));border:1px solid var(--sand);border-radius:12px;padding:10px 14px;font-size:.88rem;margin:8px 0}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--mute);font-weight:600}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:9px;width:100%}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:8px 0 12px}
+.btn{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:9px 13px;border-radius:10px;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+.btn.main{background:var(--sea);border-color:var(--sea);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.ph{height:120px;display:flex;align-items:flex-end;justify-content:space-between;padding:10px 14px;color:#fff;font-weight:800;position:relative}
+.fav{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.9);color:#c0392b;border:0;border-radius:50%;width:38px;height:38px;font-size:1.2rem;cursor:pointer}
+.bd{position:absolute;top:10px;left:10px;display:flex;gap:6px}
+.bd b{background:var(--sand);color:#2a1d00;font-size:.75rem;padding:3px 9px;border-radius:99px}
+.bd b.dn{background:#fff;color:var(--ok)}
+.body{padding:14px;display:flex;flex-direction:column;gap:7px;flex:1}
+.price{font-size:1.45rem;font-weight:800;color:var(--sea)}
+.old{font-size:.9rem;color:var(--mute);text-decoration:line-through;margin-left:8px;font-weight:400}
+.mk{font-weight:800;font-size:.85rem}.mk.lo{color:var(--ok)}.mk.hi{color:var(--bad)}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;font-size:.86rem}
+.kv span{color:var(--mute)}
+.pill{font-size:.78rem;font-weight:800;padding:2px 9px;border-radius:99px;border:1px solid var(--sea2);width:fit-content}
+.ags{font-size:.82rem;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}.acts .btn{flex:1;min-width:80px}
+.empty{text-align:center;color:var(--mute);padding:36px 10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}.row>*{flex:1;min-width:130px}
+.src{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:8px 12px;margin-top:8px;background:var(--card)}
+.src span{overflow-wrap:anywhere;font-size:.88rem}
+.tot{font-size:1.6rem;font-weight:800;color:var(--sea)}
+svg text{fill:var(--ink);font-family:inherit}
+.ta{width:100%;margin-top:8px;font:inherit;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px}[hidden]{display:none!important}
+@media print{header,.tabs,.note,.noprint,.acts,.fav{display:none!important}body{background:#fff}.card{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<div><h1 id="h1"></h1><p class="tag" id="tag"></p></div>
+<div class="tools">
+<div class="seg" id="cur"><button data-c="EUR">€</button><button data-c="USD">$</button><button data-c="TRY">₺</button></div>
+<div class="seg" id="lng" aria-label="Language"><button data-l="ru">Русский</button><button data-l="tr">Türkçe</button><button data-l="en">English</button></div>
+</div>
+</header>
+<div class="tabs" id="tabs" role="tablist"></div>
+<div class="note noprint" id="note"></div>
+
+<section id="v-s">
+<div class="panel"><div class="fg">
+<label><span data-t="price"></span><input id="f-price" type="number" min="0" step="1000" value="60000" inputmode="numeric"></label>
+<label><span data-t="rooms"></span><select id="f-rooms"><option value="">-</option><option>0+1</option><option>1+1</option><option>2+1</option><option>3+1</option><option>4+1</option></select></label>
+<label><span data-t="dist"></span><select id="f-dist"></select></label>
+<label><span data-t="deed"></span><select id="f-deed"></select></label>
+<label><span data-t="who"></span><select id="f-who"></select></label>
+<label><span data-t="seaf"></span><input id="f-sea" type="number" min="0" step="100" placeholder="m" inputmode="numeric"></label>
+<label><span data-t="sort"></span><select id="f-sort"></select></label>
+</div></div>
+<div class="bar"><b id="count"></b><button class="btn" id="save-s"></button></div>
+<div class="grid" id="grid"></div>
+</section>
+
+<section id="v-f" hidden>
+<div class="panel noprint"><div class="row">
+<label><span data-t="agn"></span><input id="a-name"></label>
+<label><span data-t="agp"></span><input id="a-phone" inputmode="tel"></label>
+<button class="btn main" id="pr"></button><button class="btn" id="cp"></button>
+</div><p class="meta" data-t="pickh"></p></div>
+<h2 id="pk-h" style="margin:4px 0"></h2>
+<div class="grid" id="pk"></div>
+</section>
+
+<section id="v-m" hidden>
+<p class="meta" data-t="maph"></p>
+<div class="panel"><svg id="map" viewBox="0 0 640 260" style="width:100%;height:auto"></svg></div>
+</section>
+
+<section id="v-c" hidden>
+<div class="panel"><div class="fg">
+<label><span data-t="cprice"></span><input id="c-p" type="number" value="55000" inputmode="numeric"></label>
+<label><span data-t="cdeed"></span><input id="c-d" type="number" value="4" step=".5"></label>
+<label><span data-t="cag"></span><input id="c-a" type="number" value="2" step=".5"></label>
+<label><span data-t="coth"></span><input id="c-o" type="number" value="700" step="50"></label>
+</div>
+<div style="margin-top:12px"><span class="meta" data-t="ctot"></span><div class="tot" id="c-t"></div><div class="meta" id="c-x"></div></div></div>
+<div class="note" data-t="cwarn"></div>
+<div class="panel"><b data-t="rates"></b><div class="fg" style="margin-top:8px">
+<label><span>1 € = $</span><input id="r-u" type="number" step=".01"></label>
+<label><span>1 € = ₺</span><input id="r-t" type="number" step=".5"></label></div></div>
+</section>
+
+<section id="v-a" hidden>
+<p class="meta" data-t="alh"></p>
+<div class="panel noprint"><label><span data-t="tg"></span><input id="tg" placeholder="@username / +90..."></label></div>
+<div id="al"></div>
+</section>
+
+<section id='v-d' hidden>
+<div class='panel'><b data-t='imp'></b><p class='meta' data-t='imph'></p>
+<div class='fg'><label><span data-t='agc'></span><input id='i-a'></label><label><span data-t='ph1'></span><input id='i-t' inputmode='tel'></label></div>
+<textarea id='i-x' rows='6' class='ta'></textarea>
+<div class='row' style='margin-top:8px'><button class='btn main' id='i-b' data-t='impb'></button></div><p class='meta' id='i-r'></p></div>
+<div class='panel'><b data-t='man'></b><div class='fg' style='margin-top:8px'>
+<label><span data-t='dist'></span><input id='m-d' list='dl'><datalist id='dl'></datalist></label>
+<label><span data-t='rooms'></span><select id='m-r'></select></label>
+<label><span data-t='pr1'></span><input id='m-p' type='number' inputmode='numeric'></label>
+<label><span data-t='ar1'></span><input id='m-m' type='number' inputmode='numeric'></label>
+<label><span data-t='seaf'></span><input id='m-se' type='number' inputmode='numeric'></label>
+<label><span data-t='fl'></span><input id='m-f' type='number' inputmode='numeric'></label>
+<label><span data-t='age1'></span><input id='m-a' type='number' inputmode='numeric'></label>
+<label><span data-t='aid1'></span><input id='m-i' type='number' inputmode='numeric'></label>
+<label><span data-t='old1'></span><input id='m-old' type='number' inputmode='numeric'></label>
+<label><span data-t='deed'></span><select id='m-dd'></select></label>
+<label><span data-t='who'></span><select id='m-o'></select></label>
+<label><span data-t='agc'></span><input id='m-ag'></label>
+<label><span data-t='ph1'></span><input id='m-t' inputmode='tel'></label>
+<label><span data-t='url1'></span><input id='m-u' type='url' inputmode='url'></label>
+<label><span data-t='pht'></span><input id='m-ph' type='file' accept='image/*' multiple></label>
+<label style='flex-direction:row;align-items:center;gap:8px'><input id='m-n' type='checkbox' style='width:auto'><span data-t='nw1'></span></label>
+</div><div class='row' style='margin-top:10px'><button class='btn main' id='m-s' data-t='sv1'></button><button class='btn' id='m-c' data-t='cn1'></button></div><p class='meta' id='m-msg'></p></div>
+<h3 data-t='mylist' style='margin:8px 0'></h3><div class='grid' id='my'></div>
+<label style='flex-direction:row;align-items:center;gap:8px;margin:12px 0'><input type='checkbox' id='dm' style='width:auto'><span data-t='dem'></span></label>
+<div class='panel'><b data-t='bkh'></b><p class='meta' data-t='bkn'></p><div class='row'><button class='btn' id='bk-c' data-t='bkc'></button><button class='btn' id='bk-r' data-t='bkr'></button></div><textarea id='bk-x' rows='3' class='ta'></textarea></div>
+</section>
+<section id="v-r" hidden>
+<p class="meta" data-t="srh"></p>
+<div class="row"><input id="s-in" type="url" inputmode="url" placeholder="https://..."><button class="btn main" id="s-add"></button></div>
+<p class="meta" style="color:var(--bad)" id="s-err" hidden></p>
+<div id="s-l"></div>
+</section>
+</div>
+
+<script>
+var X={
+title:"Алания: поиск квартир|Alanya: daire arama|Alanya property finder",
+tag:"Все предложения в одном месте|Tüm ilanlar tek yerde|Every listing in one place",
+note:"Демо: тестовые объекты и ориентировочные курсы. Реальный сбор данных и push-уведомления подключаются на сервере.|Demo: örnek ilanlar ve yaklaşık kurlar. Gerçek veri toplama ve anlık bildirimler sunucuda bağlanır.|Demo: sample listings and approximate rates. Live data collection and push alerts are connected on a server.",
+tabs:"Поиск,Подборка,Карта,Калькулятор,Поиски,Источники|Arama,Seçki,Harita,Hesaplama,Aramalar,Kaynaklar|Search,Picks,Map,Calculator,Alerts,Sources",
+price:"Цена до, €|Fiyat en çok, €|Max price, €",rooms:"Комнаты|Oda|Rooms",dist:"Район|Bölge|District",all:"Все районы|Tüm bölgeler|All districts",
+deed:"Документ|Tapu|Title deed",anyv:"Любой|Hepsi|Any",tapu:"Тапу готово|Tapu hazır|Title deed ready",proj:"Проект, без тапу|Proje, tapu yok|Off-plan, no deed",
+who:"Продавец|Satıcı|Seller",own:"Владелец|Sahibi|Owner",agt:"Агентство|Emlak ofisi|Agency",
+seaf:"До моря, м|Denize, m|To sea, m",sort:"Сортировка|Sıralama|Sort",
+s1:"Дешевле|Ucuz önce|Cheapest",s2:"Дороже|Pahalı önce|Priciest",s3:"Цена за м²|m² fiyatı|Price per m²",s4:"Ближе к морю|Denize yakın|Closest to sea",
+found:"Найдено: |Bulunan: |Found: ",none:"Ничего не найдено. Увеличьте цену или выберите другой район.|Sonuç yok. Fiyatı artırın veya başka bölge seçin.|Nothing found. Raise the price or pick another district.",
+sv:"Сохранить поиск|Aramayı kaydet|Save search",call:"Позвонить|Ara|Call",
+nw:"Новое|Yeni|New",dp:"Цена снижена|Fiyat düştü|Price dropped",
+ppm:"За м²|m² fiyatı|Per m²",below:"ниже рынка на |piyasanın altında |below market by ",above:"выше рынка на |piyasanın üstünde |above market by ",
+sea:"До моря|Denize|To sea",fl:"Этаж|Kat|Floor",age:"Возраст дома|Bina yaşı|Building age",yr:"лет|yıl|yrs",aid:"Аидат/мес|Aidat/ay|Aidat/mo",
+ags:"Предлагают агентства: |Sunan ofisler: |Offered by: ",
+st:"Новый,Звонил,Показ назначен,Отказ|Yeni,Arandı,Gösterim var,Reddetti|New,Called,Viewing set,Declined",nt:"Заметка|Not|Note",
+agn:"Ваше имя|Adınız|Your name",agp:"Ваш телефон|Telefonunuz|Your phone",pr:"Печать / PDF|Yazdır / PDF|Print / PDF",cp:"Скопировать|Kopyala|Copy",
+pickh:"Отметьте сердечком объекты в поиске. Подборку можно распечатать, сохранить в PDF или скопировать.|Aramada kalple işaretleyin. Seçkiyi yazdırabilir, PDF kaydedebilir veya kopyalayabilirsiniz.|Tap the heart in search. You can print the picks, save as PDF or copy them.",
+pk:"Подборка для клиента|Müşteri için seçki|Picks for client",pke:"Пока пусто. Нажмите сердечко на карточке.|Henüz boş. Karttaki kalbe dokunun.|Empty. Tap the heart on a listing.",
+maph:"Схема районов (не карта): размер круга показывает число объектов. Нажмите на район, чтобы отфильтровать.|Bölge şeması (harita değil): daire boyutu ilan sayısını gösterir. Filtrelemek için bölgeye dokunun.|District schematic (not a map): circle size shows listing count. Tap a district to filter.",
+sea_l:"Море|Deniz|Sea",
+cprice:"Цена объекта, €|Daire fiyatı, €|Property price, €",cdeed:"Госпошлина за тапу, %|Tapu harcı, %|Title deed fee, %",cag:"Комиссия агентства, %|Ofis komisyonu, %|Agency fee, %",coth:"Нотариус, перевод, прочее, €|Noter, tercüme, diğer, €|Notary, translation, other, €",
+ctot:"Полная стоимость покупки|Toplam satın alma maliyeti|Total purchase cost",
+cx:"Сверх цены: |Fiyata ek: |On top of price: ",
+cwarn:"Ставки введены ориентировочно и редактируются. Налоги и пошлины в Турции меняются: перед расчётом для клиента проверьте актуальные значения.|Oranlar yaklaşıktır ve düzenlenebilir. Türkiye’de vergi ve harçlar değişir: müşteriye göstermeden önce güncel değerleri kontrol edin.|Rates are approximate and editable. Turkish taxes and fees change: check current values before quoting a client.",
+rates:"Курсы валют (ориентировочно)|Döviz kurları (yaklaşık)|Exchange rates (approximate)",
+alh:"Сохраните фильтры из поиска и проверяйте, появились ли новые подходящие объекты. Автоматические уведомления в Telegram и WhatsApp включаются после подключения сервера.|Aramadaki filtreleri kaydedin ve yeni uygun ilan olup olmadığını kontrol edin. Telegram ve WhatsApp bildirimleri sunucu bağlanınca açılır.|Save filters from search and check for new matching listings. Automatic Telegram and WhatsApp alerts switch on once the server is connected.",
+tg:"Telegram или WhatsApp для уведомлений|Bildirim için Telegram veya WhatsApp|Telegram or WhatsApp for alerts",
+chk:"Проверить|Kontrol et|Check",nnew:"Новых: |Yeni: |New: ",del:"Удалить|Sil|Remove",ale:"Сохранённых поисков нет.|Kayıtlı arama yok.|No saved searches.",
+srh:"Вставьте ссылку на папку Google Диска, Google Документ или сайт агентства.|Google Drive klasörü, Google Doküman veya ofis sitesi bağlantısı yapıştırın.|Paste a link to a Google Drive folder, Google Doc or agency website.",
+add:"Добавить|Ekle|Add",bad:"Это не похоже на ссылку. Вставьте адрес целиком, начиная с https://|Bu bir bağlantıya benzemiyor. https:// ile tam adres yapıştırın.|That doesn’t look like a link. Paste the full address starting with https://",
+se:"Источников пока нет.|Henüz kaynak yok.|No sources yet.",drive:"Папка Диска|Drive klasörü|Drive folder",doc:"Документ|Doküman|Doc",site:"Сайт|Site|Website",
+cen:"Центр|Merkez|Center",sqm:"м²|m²|m²",demo:"Демо|Demo|Demo",copied:"Скопировано|Kopyalandı|Copied"
+};
+var LI={ru:0,tr:1,en:2},L="ru",C="EUR",TAB="f_s",R={EUR:1,USD:1.15,TRY:50},Z={};
+function t(k){var v=X[k];return v?v.split("|")[LI[L]]:k}
+function ta(k){return t(k).split(",")}
+function $(i){return document.getElementById(i)}
+function dn(d){return d==="cen"?t("cen"):d}
+var DEMO=[
+{id:1,d:"Mahmutlar",r:"1+1",m:56,sea:600,fl:4,age:3,aid:25,dd:"t",o:"a",nw:0,old:0,ag:[["Global Estate",56500],["Best Home",58000]],c:"#0e5c7a,#14a3a0"},
+{id:2,d:"Mahmutlar",r:"1+1",m:50,sea:900,fl:2,age:8,aid:18,dd:"t",o:"o",nw:1,old:52000,ag:[["Owner",48000]],c:"#1c6e5c,#7bc47f"},
+{id:3,d:"Kestel",r:"1+1",m:55,sea:150,fl:5,age:2,aid:30,dd:"t",o:"a",nw:1,old:0,ag:[["Toga Global",52000]],c:"#254a73,#4b8fc4"},
+{id:4,d:"Oba",r:"2+1",m:95,sea:700,fl:3,age:0,aid:0,dd:"p",o:"a",nw:0,old:94000,ag:[["Adımanlar",89000],["Global Estate",91000]],c:"#5b3f8c,#b37fd1"},
+{id:5,d:"Tosmur",r:"2+1",m:110,sea:200,fl:7,age:4,aid:60,dd:"t",o:"a",nw:0,old:0,ag:[["Yekta",112000]],c:"#7a4a1e,#e0a458"},
+{id:6,d:"cen",r:"3+1",m:140,sea:300,fl:6,age:10,aid:45,dd:"t",o:"o",nw:0,old:140000,ag:[["Owner",135000]],c:"#8a2f4a,#e2778f"},
+{id:7,d:"Mahmutlar",r:"2+1",m:80,sea:450,fl:3,age:1,aid:35,dd:"t",o:"a",nw:1,old:0,ag:[["Best Home",75000]],c:"#0f5d63,#4fc0b6"}
+];
+var S={fav:[],nt:{},al:[],src:[],ag:{n:"",p:""},tg:"",ls:[],demo:0};
+try{var sv=JSON.parse(localStorage.getItem("af2")||"{}");for(var k in sv)S[k]=sv[k];if(sv.L)L=sv.L;if(sv.C)C=sv.C;if(sv.R)R=sv.R}catch(e){}
+S.ls=S.ls||[];var D=[],avg={},AUTO=[];
+function prep(){var base=AUTO.concat(S.ls);D=(S.demo||!base.length)?base.concat(DEMO):base;avg={};var c={};
+D.forEach(function(x){x.p=Math.min.apply(null,x.ag.map(function(a){return a[1]}));x.pm=x.m?x.p/x.m:0;if(S.ls.indexOf(x)>-1)x.my=1;if(x.pm)(c[x.d]=c[x.d]||[]).push(x.pm)});
+for(var k in c)avg[k]=c[k].reduce(function(a,b){return a+b})/c[k].length}
+prep();
+function save(){try{S.L=L;S.C=C;S.R=R;localStorage.setItem("af2",JSON.stringify(S));return 1}catch(e){return 0}}
+function money(e){var v=e*R[C],s=C==="EUR"?"€":C==="USD"?"$":"₺";return Math.round(v).toLocaleString(L==="ru"?"ru-RU":L==="tr"?"tr-TR":"en-GB")+" "+s}
+function F(){return{p:+$("f-price").value||1e9,r:$("f-rooms").value,d:$("f-dist").value,dd:$("f-deed").value,o:$("f-who").value,s:+$("f-sea").value||1e9}}
+function match(x,f){return x.p<=f.p&&(!f.r||x.r===f.r)&&(!f.d||x.d===f.d)&&(!f.dd||x.dd===f.dd)&&(!f.o||x.o===f.o)&&(f.s>=1e9||(x.sea&&x.sea<=f.s))}
+function list(){var so=$("f-sort").value,a=D.filter(function(x){return match(x,F())});
+a.sort(function(x,y){return so==="1"?x.p-y.p:so==="2"?y.p-x.p:so==="3"?x.pm-y.pm:(x.sea||1e9)-(y.sea||1e9)});return a}
+function card(x){
+var g=x.c.split(","),n=dn(x.d),fv=S.fav.indexOf(x.id)>-1,nt=S.nt[x.id]||{s:0,n:""},st=ta("st");
+var dv=Math.round((x.pm/avg[x.d]-1)*100),mk=!x.pm||dv===0||D.filter(function(y){return y.d===x.d}).length<2?"":(dv<0?'<span class="mk lo">'+t("below")+(-dv)+'%</span>':'<span class="mk hi">'+t("above")+dv+'%</span>');
+return '<article class="card"><div class="ph" style="background:'+(x.ph&&x.ph[0]?'url('+x.ph[0]+') center/cover':'linear-gradient(135deg,'+g[0]+','+g[1]+')')+'"><div class="bd">'+(x.nw?'<b>'+t("nw")+'</b>':'')+(x.old>x.p?'<b class="dn">'+t("dp")+'</b>':'')+'</div><span style="margin-top:auto">'+n+' · '+x.r+'</span><button class="fav" data-f="'+x.id+'" aria-pressed="'+fv+'">'+(fv?"♥":"♡")+'</button></div><div class="body"><div class="price">'+money(x.p)+(x.old>x.p?'<span class="old">'+money(x.old)+'</span>':'')+'</div><div>'+t("ppm")+': <b>'+(x.pm?money(x.pm):"—")+'</b> '+mk+'</div><div class="kv"><div><span>'+t("sea")+'</span> '+(x.sea?x.sea+" m":"—")+'</div><div><span>'+t("fl")+'</span> '+(x.fl||"—")+'</div><div><span>'+t("age")+'</span> '+(x.age||"—")+(x.age?' '+t("yr"):'')+'</div><div><span>'+t("aid")+'</span> '+(x.aid?money(x.aid):"—")+'</div><div><span>'+t("sqm")+'</span> '+(x.m||"—")+'</div><div><span>'+t("deed")+'</span> '+t(x.dd==="t"?"tapu":"proj")+'</div></div><span class="pill">'+t(x.o==="o"?"own":"agt")+'</span>'+(x.ag.length>1?'<div class="ags">'+t("ags")+x.ag.map(function(a){return a[0]+" "+money(a[1])}).join(" · ")+'</div>':'')+'<div class="noprint"><select data-s="'+x.id+'">'+st.map(function(s,i){return '<option value="'+i+'"'+(i==nt.s?" selected":"")+'>'+s+'</option>'}).join("")+'</select><input style="margin-top:6px" data-n="'+x.id+'" placeholder="'+t("nt")+'" value="'+nt.n.replace(/"/g,"&quot;")+'"></div>'+acts(x)+'</div></article>'}
+function opts(el,arr,cur){$(el).innerHTML=arr.map(function(a){return '<option value="'+a[0]+'">'+a[1]+'</option>'}).join("");$(el).value=cur||""}
+function labels(){
+document.documentElement.lang=L;document.title=t("title");$("h1").textContent=t("title");$("tag").textContent=t("tag");$("note").textContent=t("note");
+document.querySelectorAll("[data-t]").forEach(function(e){e.textContent=t(e.dataset.t)});
+var tb=ta("tabs"),ids=["s","f","m","c","a","r","d"];
+$("tabs").innerHTML=ids.map(function(i,j){return '<button role="tab" data-tab="'+i+'" aria-selected="'+(TAB===i)+'">'+tb[j]+'</button>'}).join("");
+opts("f-dist",[["",t("all")]].concat(dists().map(function(d){return[d,dn(d)]})),$("f-dist").value);
+opts("f-deed",[["",t("anyv")],["t",t("tapu")],["p",t("proj")]],$("f-deed").value);
+opts("f-who",[["",t("anyv")],["o",t("own")],["a",t("agt")]],$("f-who").value);
+opts("f-sort",[["1",t("s1")],["2",t("s2")],["3",t("s3")],["4",t("s4")]],$("f-sort").value||"1");
+$("save-s").textContent=t("sv");$("pr").textContent=t("pr");$("cp").textContent=t("cp");$("s-add").textContent=t("add");
+$("a-name").value=S.ag.n;$("a-phone").value=S.ag.p;$("tg").value=S.tg;$("r-u").value=R.USD;$("r-t").value=R.TRY;
+document.querySelectorAll("#lng button").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.l===L)});
+document.querySelectorAll("#cur button").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.c===C)});
+view()}
+function view(){
+["s","f","m","c","a","r","d"].forEach(function(i){$("v-"+i).hidden=TAB!==i});
+document.querySelectorAll("#tabs button").forEach(function(b){b.setAttribute("aria-selected",b.dataset.tab===TAB)});
+var a=list();$("count").textContent=t("found")+a.length;
+$("grid").innerHTML=a.length?a.map(card).join(""):'<div class="empty">'+t("none")+'</div>';
+var pk=D.filter(function(x){return S.fav.indexOf(x.id)>-1});
+$("pk-h").textContent=t("pk")+(S.ag.n?" · "+S.ag.n:"")+(S.ag.p?" · "+S.ag.p:"");
+$("pk").innerHTML=pk.length?pk.map(card).join(""):'<div class="empty">'+t("pke")+'</div>';
+map();calc();alerts();srcs();mine()}
+function map(){
+var ds=dists(),pos={};ds.forEach(function(d,i){pos[d]=[50+i*(540/Math.max(ds.length-1,1)),90+(i%2)*30]});var h='<path d="M0 150 Q160 140 320 150 T640 140 L640 260 L0 260Z" fill="color-mix(in srgb,var(--sea2) 25%,var(--card))"/><text x="320" y="225" text-anchor="middle" font-size="16" font-weight="800">'+t("sea_l")+'</text>';
+for(var d in pos){var n=D.filter(function(x){return x.d===d}).length,r=14+Math.min(n,8)*4;
+h+='<g data-m="'+d+'" style="cursor:pointer"><circle cx="'+pos[d][0]+'" cy="'+pos[d][1]+'" r="'+r+'" fill="var(--sea)" opacity=".85"/><text x="'+pos[d][0]+'" y="'+(pos[d][1]+5)+'" text-anchor="middle" font-size="14" font-weight="800" style="fill:#fff">'+n+'</text><text x="'+pos[d][0]+'" y="'+(pos[d][1]+r+18)+'" text-anchor="middle" font-size="13">'+dn(d)+'</text></g>'}
+$("map").innerHTML=h}
+function calc(){var p=+$("c-p").value||0,d=p*(+$("c-d").value||0)/100,a=p*(+$("c-a").value||0)/100,o=(+$("c-o").value||0);
+$("c-t").textContent=money(p+d+a+o);$("c-x").textContent=t("cx")+money(d+a+o)}
+function alerts(){$("al").innerHTML=S.al.length?S.al.map(function(s,i){var n=D.filter(function(x){return match(x,s.f)&&s.seen.indexOf(x.id)<0}).length;
+return '<div class="src"><span><b>'+(s.f.d?dn(s.f.d):t("all"))+'</b> · '+(s.f.r||"-")+' · ≤ '+money(s.f.p)+' · '+t("nnew")+n+'</span><span><button class="btn" data-ck="'+i+'">'+t("chk")+'</button> <button class="btn" data-da="'+i+'">'+t("del")+'</button></span></div>'}).join(""):'<p class="empty">'+t("ale")+'</p>'}
+function kind(u){return/drive\.google/.test(u)?"drive":/docs\.google/.test(u)?"doc":"site"}
+function srcs(){$("s-l").innerHTML=S.src.length?S.src.map(function(s,i){return '<div class="src"><span><b>'+t(kind(s))+'</b> '+s.replace(/</g,"&lt;")+'</span><button class="btn" data-ds="'+i+'">'+t("del")+'</button></div>'}).join(""):'<p class="empty">'+t("se")+'</p>'}
+function txt(x){return dn(x.d)+", "+x.r+", "+x.m+" m², "+money(x.p)+", "+t("sea")+" "+x.sea+" m"}
+document.addEventListener("click",function(e){
+var b=e.target.closest("button,g[data-m]");if(!b)return;var q=b.dataset;
+if(q.l){L=q.l;save();labels()}else if(q.c){C=q.c;save();labels()}else if(q.tab){TAB=q.tab;view()}
+else if(q.f){var i=S.fav.indexOf(+q.f);i>-1?S.fav.splice(i,1):S.fav.push(+q.f);save();view()}
+else if(q.m){$("f-dist").value=q.m;TAB="s";view()}
+else if(q.da){S.al.splice(+q.da,1);save();alerts()}
+else if(q.ck){var s=S.al[+q.ck];s.seen=D.filter(function(x){return match(x,s.f)}).map(function(x){return x.id});save();alerts()}
+else if(q.ds){S.src.splice(+q.ds,1);save();srcs()}
+});
+document.addEventListener("input",function(e){var q=e.target.dataset;
+if(q.s||q.n){var id=q.s||q.n;S.nt[id]=S.nt[id]||{s:0,n:""};if(q.s)S.nt[id].s=+e.target.value;else S.nt[id].n=e.target.value;save()}
+else if(/^f-/.test(e.target.id))view();else if(/^c-/.test(e.target.id))calc();
+else if(e.target.id==="a-name"||e.target.id==="a-phone"){S.ag={n:$("a-name").value,p:$("a-phone").value};save();$("pk-h").textContent=t("pk")+(S.ag.n?" · "+S.ag.n:"")+(S.ag.p?" · "+S.ag.p:"")}
+else if(e.target.id==="tg"){S.tg=e.target.value;save()}
+else if(e.target.id==="r-u"||e.target.id==="r-t"){R.USD=+$("r-u").value||R.USD;R.TRY=+$("r-t").value||R.TRY;save();view()}});
+$("save-s").onclick=function(){var f=F();S.al.push({f:f,seen:D.filter(function(x){return match(x,f)}).map(function(x){return x.id})});save();TAB="a";view()};
+$("pr").onclick=function(){window.print()};
+$("cp").onclick=function(){var s=(S.ag.n?S.ag.n+" "+S.ag.p+"\n":"")+D.filter(function(x){return S.fav.indexOf(x.id)>-1}).map(txt).join("\n"),b=$("cp");
+if(navigator.clipboard)navigator.clipboard.writeText(s).then(function(){b.textContent=t("copied");setTimeout(function(){b.textContent=t("cp")},1500)})};
+$("s-add").onclick=function(){var v=$("s-in").value.trim(),er=$("s-err");
+if(!/^https?:\/\/\S+\.\S+/.test(v)){er.textContent=t("bad");er.hidden=false;return}
+er.hidden=true;if(S.src.indexOf(v)<0)S.src.push(v);$("s-in").value="";save();srcs()};
+Object.assign(X,{
+tabs:'Поиск,Подборка,Карта,Калькулятор,Поиски,Источники,Объекты|Arama,Seçki,Harita,Hesaplama,Aramalar,Kaynaklar,İlanlar|Search,Picks,Map,Calculator,Alerts,Sources,Listings',
+note:'Данные хранятся в вашем браузере. Демо-объекты можно скрыть во вкладке «Объекты». Курсы и ставки редактируются.|Veriler tarayıcınızda saklanır. Demo ilanlar «İlanlar» sekmesinde gizlenebilir. Kurlar ve oranlar düzenlenebilir.|Data is stored in your browser. Demo listings can be hidden in the Listings tab. Rates are editable.',
+imp:'Вставить прайс из документа|Doküman veya fiyat listesi yapıştır|Paste a price list',
+imph:'Скопируйте текст из документа или объявления агентства: одна квартира в строке, с районом, комнатами, м², этажом и ценой в евро. Остальное приложение найдёт само, пустые поля можно дописать вручную.|Doküman veya ilan metnini kopyalayın: her satırda bir daire; bölge, oda, m², kat ve euro fiyat ile. Gerisini uygulama bulur, boş alanları elle ekleyebilirsiniz.|Copy text from an agency document or listing: one apartment per line with district, rooms, m², floor and price in euros. The app finds the rest; you can fill gaps by hand.',
+agc:'Агентство или владелец|Ofis veya sahip|Agency or owner',
+ph1:'Телефон (необязательно)|Telefon (isteğe bağlı)|Phone (optional)',
+impb:'Импортировать|İçe aktar|Import',
+impr:'Добавлено: |Eklendi: |Added: ',
+impm:', объединено дублей: |, birleştirilen kopya: |, merged duplicates: ',
+impn:'Не нашёл ни одной цены в евро. В строках должна быть сумма вроде «56 000 €» или «56.000 euro».|Euro cinsinden fiyat bulunamadı. Satırlarda «56 000 €» veya «56.000 euro» gibi tutar olmalı.|No euro price found. Lines need an amount like “56 000 €” or “56.000 euro”.',
+man:'Добавить объект вручную|Elle ilan ekle|Add a listing by hand',
+pr1:'Цена, €|Fiyat, €|Price, €',
+ar1:'Площадь, м²|Alan, m²|Area, m²',
+age1:'Возраст дома, лет|Bina yaşı, yıl|Building age, yrs',
+aid1:'Аидат, €/мес|Aidat, €/ay|Aidat, €/mo',
+old1:'Старая цена, €|Eski fiyat, €|Old price, €',
+url1:'Ссылка на объявление|İlan bağlantısı|Listing link',
+pht:'Фото с телефона (до 3)|Telefondan fotoğraf (en fazla 3)|Photos from your device (up to 3)',
+nw1:'Отметить как новое|Yeni olarak işaretle|Mark as new',
+sv1:'Сохранить объект|İlanı kaydet|Save listing',
+cn1:'Сбросить|Sıfırla|Reset',
+edit:'Изменить|Düzenle|Edit',
+src:'Объявление|İlan|Listing',
+mylist:'Мои объекты|İlanlarım|My listings',
+mye:'Своих объектов пока нет. Вставьте прайс или добавьте объект вручную.|Henüz kendi ilanınız yok. Fiyat listesi yapıştırın veya elle ekleyin.|No listings of your own yet. Paste a price list or add one by hand.',
+needp:'Укажите цену.|Fiyat girin.|Enter a price.',
+ok:'Сохранено|Kaydedildi|Saved',
+full:'Память браузера заполнена. Уберите часть фото.|Tarayıcı belleği doldu. Bazı fotoğrafları kaldırın.|Browser storage is full. Remove some photos.',
+dem:'Показывать демо-объекты вместе со своими|Demo ilanları kendi ilanlarımla birlikte göster|Show demo listings alongside mine',
+bkh:'Резервная копия|Yedek|Backup',
+bkn:'Данные хранятся только в этом браузере. Время от времени копируйте резервную копию и сохраняйте её в заметках телефона.|Veriler yalnızca bu tarayıcıda saklanır. Zaman zaman yedeği kopyalayıp telefon notlarına kaydedin.|Data lives only in this browser. Copy a backup now and then and keep it in your phone notes.',
+bkc:'Скопировать копию|Yedeği kopyala|Copy backup',
+bkr:'Восстановить из текста|Metinden geri yükle|Restore from text'
+});
+var cur=0,ph=[],PAL=['#0e5c7a,#14a3a0','#1c6e5c,#7bc47f','#254a73,#4b8fc4','#5b3f8c,#b37fd1','#7a4a1e,#e0a458','#8a2f4a,#e2778f'],
+KD=['Mahmutlar','Kestel','Oba','Tosmur','Cikcilli','Çıkcılı','Kargicak','Kargıcak','Demirtaş','Avsallar','Konaklı','Payallar','Türkler','Okurcalar','Merkez','Center','Alanya'];
+function g(i){return $(i).value.trim()}
+function ntel(p){p=(p||'').replace(/[^\d+]/g,'');if(!p)return '';if(p[0]==='0')return '+9'+p;return p[0]==='+'?p:'+'+p}
+function dists(){var a=['Mahmutlar','Kestel','Oba','Tosmur','cen'];D.forEach(function(x){if(a.indexOf(x.d)<0)a.push(x.d)});return a.filter(function(d){return D.some(function(x){return x.d===d})})}
+function acts(x){var tl=x.tel||'',h='';
+if(tl)h+='<a class="btn main" href="tel:'+tl+'">'+t('call')+'</a><a class="btn" href="https://wa.me/'+tl.replace('+','')+'" target="_blank" rel="noopener">WhatsApp</a>';
+if(/^https?:\/\//.test(x.url||''))h+='<a class="btn" href="'+encodeURI(x.url)+'" target="_blank" rel="noopener">'+t('src')+'</a>';
+if(x.my)h+='<button class="btn noprint" data-ed="'+x.id+'">'+t('edit')+'</button><button class="btn noprint" data-dl="'+x.id+'">'+t('del')+'</button>';
+return h?'<div class="acts">'+h+'</div>':''}
+function key(x){return [x.d,x.r,x.m,x.fl].join('|')}
+function addL(o){var k=key(o),e=o.m?S.ls.filter(function(x){return key(x)===k})[0]:0;
+if(e){var a=e.ag.filter(function(z){return z[0]===o.ag[0][0]})[0];if(a)a[1]=o.ag[0][1];else e.ag.push(o.ag[0]);if(!e.tel&&o.tel)e.tel=o.tel;return 0}
+S.ls.push(o);return 1}
+function parse(tx,an,tl){var out=[],room='';
+tx.split(/\n+/).forEach(function(l,i){l=l.trim();if(!l)return;
+var hd=l.match(/^\W*(\d\+\d)\W*daire/i);if(hd){room=hd[1];return}
+var pm=l.match(/(\d{1,3}(?:[ .,]\d{3})+|\d{4,7})\s*(?:€|euro|eur)/i)||l.match(/(?:€|euro|eur)\s*(\d{1,3}(?:[ .,]\d{3})+|\d{4,7})/i);if(!pm)return;
+var p=+pm[1].replace(/\D/g,'');if(p<5000||p>5e6)return;
+var rm=l.match(/(\d\+\d)/),ar=l.match(/(\d{2,3})\s*(?:m2|m²|metre)/i),fl=l.match(/(\d{1,2})\s*\.?\s*kat/i),d='',lw=l.toLowerCase();
+KD.forEach(function(k){if(!d&&new RegExp('(^|[^a-zçğıöşü])'+k.toLowerCase()+'($|[^a-zçğıöşü])').test(lw))d=k});
+if(d==='Merkez'||d==='Center')d='cen';
+out.push({id:Date.now()+i,d:d||'Alanya',r:rm?rm[1]:room,m:ar?+ar[1]:0,sea:0,fl:fl?+fl[1]:0,age:0,aid:0,dd:/proje|off.?plan|inşaat/i.test(l)?'p':'t',o:/sahibinden|owner|владел|хозяин/i.test(l)?'o':'a',nw:0,old:0,ag:[[an,p]],tel:tl,url:'',ph:[],c:PAL[i%PAL.length]})});
+return out}
+function shrink(f,cb){var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.7))};im.src=r.result};r.readAsDataURL(f)}
+function mine(){
+opts('m-dd',[['t',t('tapu')],['p',t('proj')]],$('m-dd').value||'t');
+opts('m-o',[['a',t('agt')],['o',t('own')]],$('m-o').value||'a');
+opts('m-r',['0+1','1+1','2+1','3+1','4+1'].map(function(r){return[r,r]}),$('m-r').value||'1+1');
+opts('f-dist',[['',t('all')]].concat(dists().map(function(d){return[d,dn(d)]})),$('f-dist').value);
+$('dl').innerHTML=dists().map(function(d){return '<option value="'+d+'">'}).join('');
+$('dm').checked=!!S.demo;
+$('my').innerHTML=S.ls.length?S.ls.map(card).join(''):'<div class="empty">'+t('mye')+'</div>'}
+function rf(){cur=0;ph=[];['m-d','m-p','m-m','m-se','m-f','m-a','m-i','m-old','m-ag','m-t','m-u'].forEach(function(i){$(i).value=''});$('m-n').checked=false;$('m-ph').value=''}
+function flash(b,k,k2){b.textContent=t(k);setTimeout(function(){b.textContent=t(k2)},1500)}
+$('i-b').onclick=function(){var tx=$('i-x').value,tl=ntel(g('i-t')||(tx.match(/\+90[\d\s]{10,13}/)||[''])[0]),o=parse(tx,g('i-a')||'?',tl),n=0,m=0;
+o.forEach(function(x){addL(x)?n++:m++});
+$('i-r').textContent=o.length?t('impr')+n+t('impm')+m:t('impn');
+if(o.length){$('i-x').value='';prep();save();view()}};
+$('m-ph').onchange=function(){ph=[];[].slice.call(this.files,0,3).forEach(function(f){shrink(f,function(u){ph.push(u)})})};
+$('m-s').onclick=function(){var p=+g('m-p'),ms=$('m-msg');if(!p){ms.textContent=t('needp');return}
+var e=cur?S.ls.filter(function(z){return z.id===cur})[0]:0,
+o={id:cur||Date.now(),d:g('m-d')||'Alanya',r:$('m-r').value,m:+g('m-m')||0,sea:+g('m-se')||0,fl:+g('m-f')||0,age:+g('m-a')||0,aid:+g('m-i')||0,dd:$('m-dd').value,o:$('m-o').value,nw:$('m-n').checked?1:0,old:+g('m-old')||0,ag:[[g('m-ag')||'?',p]].concat(e?e.ag.slice(1):[]),tel:ntel(g('m-t')),url:g('m-u'),ph:ph.slice(),c:e?e.c:PAL[S.ls.length%PAL.length]};
+if(e)S.ls[S.ls.indexOf(e)]=o;else addL(o);
+rf();prep();ms.textContent=save()?t('ok'):t('full');view()};
+$('m-c').onclick=function(){rf();$('m-msg').textContent=''};
+$('dm').onchange=function(){S.demo=this.checked?1:0;prep();save();view()};
+$('bk-c').onclick=function(){var b=$('bk-c'),s=JSON.stringify({ls:S.ls,fav:S.fav,nt:S.nt,al:S.al,src:S.src,ag:S.ag});
+if(navigator.clipboard)navigator.clipboard.writeText(s).then(function(){flash(b,'copied','bkc')})};
+$('bk-r').onclick=function(){try{var v=JSON.parse($('bk-x').value);['ls','fav','nt','al','src','ag'].forEach(function(k){if(v[k])S[k]=v[k]});$('bk-x').value='';prep();save();view()}catch(e){}};
+document.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var q=b.dataset;
+if(q.ed){var x=S.ls.filter(function(z){return z.id==q.ed})[0];if(!x)return;cur=x.id;ph=(x.ph||[]).slice();
+$('m-d').value=x.d;$('m-r').value=x.r||'1+1';$('m-p').value=x.ag[0][1];$('m-m').value=x.m||'';$('m-se').value=x.sea||'';$('m-f').value=x.fl||'';$('m-a').value=x.age||'';$('m-i').value=x.aid||'';$('m-old').value=x.old||'';$('m-dd').value=x.dd;$('m-o').value=x.o;$('m-ag').value=x.ag[0][0];$('m-t').value=x.tel||'';$('m-u').value=x.url||'';$('m-n').checked=!!x.nw;
+TAB='d';view();$('m-d').scrollIntoView()}
+else if(q.dl){S.ls=S.ls.filter(function(z){return z.id!=q.dl});S.fav=S.fav.filter(function(i){return i!=q.dl});prep();save();view()}});
+
+labels();
+fetch('data/listings.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
+if(!j||!j.listings)return;AUTO=j.listings;X.note=X.note.split('|').map(function(s){return s+' · '+j.updated}).join('|');prep();labels()}).catch(function(){});
+</script>
+</body>
+</html>
