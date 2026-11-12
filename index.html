@@ -432,7 +432,7 @@ function act(){var c=S.cl.filter(function(z){return z.id==S.ac})[0]||S.cl[0];S.a
 act();
 Object.assign(X,{clsel:'Клиент (подборка)|Müşteri (seçki)|Client (picks)',clnew:'Новый клиент|Yeni müşteri|New client',cladd:'Создать|Oluştur|Create',cldel:'Удалить клиента|Müşteriyi sil|Delete client',cl0:'Без имени|Adsız|Unnamed',prm:'Убрать|Çıkar|Remove',phl:'Фото|Fotoğraf|Photos',phy:'Только с фото|Sadece fotoğraflı|With photos only',phn:'Только без фото|Sadece fotoğrafsız|Without photos only',rjl:'Показывать отказанные|Reddedilenleri göster|Show declined'});
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-var PRC=/\d[\d.,\s]*\s*(?:€|euro|eur|tl\b|₺|try\b|lira)/ig;
+var PRC=/(?<![\d+])\d[\d.,\s]*\s*(?:€|euro|eur|tl\b|₺|try\b|lira)/ig;
 function pkh(){var c=act();$('pk-h').textContent=t('pk')+(c.name?' · '+c.name:'')+(S.ag.n?' · '+S.ag.n:'')+(S.ag.p?' · '+S.ag.p:'')+' · '+S.fav.length}
 function clfill(){$('cl-s').innerHTML=S.cl.map(function(c){return '<option value="'+c.id+'"'+(c.id==S.ac?' selected':'')+'>'+esc(c.name||t('cl0'))+' ('+c.items.length+')</option>'}).join('');
 opts('f-ph',[['',t('anyv')],['y',t('phy')],['n',t('phn')]],$('f-ph').value)}
@@ -462,6 +462,13 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
 if(q.mv){var a=q.mv.split(','),i=S.fav.indexOf(+a[0]),j=i+(+a[1]);if(i>-1&&j>=0&&j<S.fav.length){var w=S.fav[i];S.fav[i]=S.fav[j];S.fav[j]=w;save();view()}}
 else if(q.pr){var k=S.fav.indexOf(+q.pr);if(k>-1){S.fav.splice(k,1);save();view()}}});
 document.addEventListener('change',function(e){if(e.target.dataset&&e.target.dataset.s&&+e.target.value===3)view()});
+function photoFiles(x){var u=(x.ph||[]).filter(function(p){return !/^https?:/.test(p)}).slice(0,4);
+return Promise.all(u.map(function(p,i){return fetch(p).then(function(r){return r.blob()}).then(function(b){return new File([b],'photo'+(i+1)+'.jpg',{type:b.type||'image/jpeg'})}).catch(function(){return null})})).then(function(a){return a.filter(Boolean)})}
+function share(id,btn){var x=D.filter(function(z){return z.id==id})[0];if(!x)return;var c=act(),n=S.fav.indexOf(x.id)+1,s=(c.name&&n?c.name+'\n':'')+clientText(x,n),o=btn.textContent;btn.textContent='…';
+photoFiles(x).then(function(fs){btn.textContent=o;var d={title:t('title'),text:s};
+if(fs.length&&navigator.canShare&&navigator.canShare({files:fs}))d.files=fs;
+if(navigator.share){navigator.share(d).catch(function(){})}
+else if(navigator.clipboard){navigator.clipboard.writeText(s).then(function(){btn.textContent=t('copied');setTimeout(function(){btn.textContent=o},1500)})}})}
 labels();
 fetch('data/listings.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
 if(!j||!j.listings)return;AUTO=j.listings;X.note=X.note.split('|').map(function(s){return s+' · '+j.updated}).join('|');prep();labels()}).catch(function(){});
