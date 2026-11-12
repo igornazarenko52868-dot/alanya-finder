@@ -13,6 +13,7 @@ KD = ["Mahmutlar", "Kestel", "Oba", "Tosmur", "Cikcilli", "Çıkcılı", "Kargic
       "Demirtaş", "Avsallar", "Konaklı", "Payallar", "Türkler", "Okurcalar", "Merkez", "Center", "Alanya"]
 PAL = ["#0e5c7a,#14a3a0", "#1c6e5c,#7bc47f", "#254a73,#4b8fc4", "#5b3f8c,#b37fd1", "#7a4a1e,#e0a458", "#8a2f4a,#e2778f"]
 IMG = (".jpg", ".jpeg", ".png", ".webp")
+DOCS = (".pdf", ".docx", ".txt")
 PRICE = re.compile(r"(?<![\d+])(\d{1,3}(?:[ .,]\d{3})+|\d{4,7})\s*(?:€|euro|eur)", re.I)
 # Rate used to convert prices written in Turkish lira (TL). Change it when the rate moves.
 TRY_PER_EUR = 56
@@ -133,6 +134,177 @@ def drive_list(fid):
     return out
 
 
+FEAT = [
+    (r"a[cç][iıİI]k\s+havuz|open\s+pool|открыт\w*\s+бассейн", "pool"),
+    (r"kapal[iıİI]\s+havuz|indoor\s+pool|закрыт\w*\s+бассейн", "pool_in"),
+    (r"havuz|бассейн|\bpool\b", "pool_any"),
+    (r"f[iıİI]tn[eE]ss?|spor\s+salonu|\bgym\b|фитнес|тренажерн", "gym"),
+    (r"sauna|сауна", "sauna"),
+    (r"hamam|хамам", "hamam"),
+    (r"masaj|massage|массаж", "massage"),
+    (r"barbek[uü]|\bbbq\b|барбекю|мангал", "bbq"),
+    (r"kamelya|gazebo|беседк", "gazebo"),
+    (r"e[sş]yal[iıİI]|furnished|с\s+мебелью|меблирован", "furn"),
+    (r"asans[oö]r|elevator|лифт", "elev"),
+    (r"otopark|parking|парковк", "park"),
+    (r"g[uü]venl[iıİI]k|security|охран", "sec"),
+    (r"[cç]ocuk\s+(?:oyun\s+)?(?:park|alan)|playground|детск\w+\s+площадк", "play"),
+    (r"[cç]am\s+balkon|glass\s+balcon|стеклянн\w+\s+балкон", "gbal"),
+    (r"jenerat[oö]r|generator|генератор", "gen"),
+    (r"ten[iıİI]s|tennis|теннис", "tennis"),
+    (r"merkez[iıİI]\s+uydu|central\s+satellite", "sat"),
+    (r"ye[sş][iıİI]l\s+alan|green\s+area|зелен\w+\s+зона", "green"),
+    (r"kapora\s+al[iıİI]nd[iıİI]|reserved|задаток", "dep"),
+    (r"vatanda[sş]l[iıİI][gğ]a\s+uygun|citizenship", "cit"),
+    (r"kredi(?:ye)?\s+(?:ve\s+vatanda\w*\s+)?uygun|mortgage", "cred"),
+]
+
+
+def pdf_text(b):
+    try:
+        import pypdf
+    except ImportError:
+        import subprocess, sys
+        subprocess.run([sys.executable, "-m", "pip", "install", "--quiet", "pypdf"], check=False)
+        try:
+            import pypdf
+        except ImportError:
+            print("  pypdf is not available, PDFs are skipped")
+            return ""
+    import io
+    r = pypdf.PdfReader(io.BytesIO(b))
+    return "\n".join((p.extract_text() or "") for p in r.pages[:3])
+
+
+def read_doc(fid, name):
+    """Download a PDF / DOCX / TXT from a public Drive folder and return its text."""
+    b = get_bytes("https://drive.google.com/uc?export=download&id=" + fid)
+    n = name.lower()
+    try:
+        if n.endswith(".pdf") and b[:4] == b"%PDF":
+            return pdf_text(b)
+        if n.endswith(".docx") and b[:2] == b"PK":
+            import io, zipfile
+            x = zipfile.ZipFile(io.BytesIO(b)).read("word/document.xml").decode("utf-8", "replace")
+            return html.unescape(re.sub(r"<[^>]+>", "", re.sub(r"</w:p>", "\n", x)))
+        if n.endswith(".txt") and b:
+            return b.decode("utf-8", "replace")
+    except Exception as e:  # noqa
+        print("  cannot read", name, e)
+    return ""
+
+
+def parse_details(text):
+    """Pull area, floor, sea distance, building age, features, price... out of a description text."""
+    if not text:
+        return {}
+    flat = re.sub(r"\s+", " ", text)
+    d = {}
+    m = re.search(r"📍\s*([^\W\d_]+)", flat)
+    if m:
+        d["d"] = m.group(1)
+        title = re.sub(r"\s+", " ", re.sub(r"[^\w\s\-+.,/&()'’]", "", flat.split("📍")[0])).strip(" -")
+        if 3 <= len(title) <= 80:
+            d["title"] = title
+    if "d" not in d:  # no pin: look for a known district name
+        for k in KD:
+            if k != "Alanya" and re.search(r"(?<![^\W\d_])" + k + r"(?![^\W\d_])", flat, re.I):
+                d["d"] = k
+                break
+    if d.get("d"):
+        for k in KD:
+            if k.lower() == d["d"].lower():
+                d["d"] = k
+        if d["d"] in ("Merkez", "Center"):
+            d["d"] = "cen"
+    if "title" not in d:  # e.g. *SONAS BUKET RESIDENCE*
+        m = re.search(r"([A-ZÇĞİÖŞÜ][A-ZÇĞİÖŞÜ0-9 ]{2,40}(?:RESIDENCE|REZIDANS|REZİDANS|SİTESİ|SITESI))", flat)
+        if m:
+            d["title"] = m.group(1).strip().title()
+    m = re.search(r"\bkod\s*:?\s*(\d{3,6})", flat, re.I)
+    if m:
+        d["cd"] = m.group(1)
+    m = re.search(r"(\d\+\d)", flat)
+    if m:
+        d["r"] = m.group(1)
+    m = re.search(r"(\d{2,3})\s*(?:m²|m2|м²|м2)", flat, re.I)
+    if m:
+        d["m"] = int(m.group(1))
+    m = (re.search(r"bulundu[gğ]u\s+kat\D{0,3}(\d{1,2})", flat, re.I)
+         or re.search(r"(?<![^\W\d_])(\d{1,2})\s*\.?\s*kat\b", flat, re.I)
+         or re.search(r"этаж\s*:?\s*(\d{1,2})", flat, re.I))
+    if m:
+        d["fl"] = int(m.group(1))
+    m = (re.search(r"🏖\D{0,6}?(\d{2,4})\s*m\b", flat) or re.search(r"denize\D{0,14}?(\d{2,4})\s*m(?:etre)?\b", flat, re.I)
+         or re.search(r"до моря\D{0,14}?(\d{2,4})", flat, re.I))
+    if m:
+        d["sea"] = int(m.group(1))
+    m = re.search(r"✈\D{0,6}?(\d{1,3})\s*km", flat) or re.search(r"(?:airport|havaalan\w*|аэропорт)\D{0,14}?(\d{1,3})\s*km", flat, re.I)
+    if m:
+        d["ap"] = int(m.group(1))
+    m = re.search(r"🛒\D{0,6}?(\d{2,4})\s*m\b", flat)
+    if m:
+        d["mkt"] = int(m.group(1))
+    if "sea" not in d:  # emojis lost: header looks like "300 m 35 km 100 m"
+        m = re.search(r"\b(\d{2,4})\s*m\s+(\d{1,3})\s*km\s+(\d{2,4})\s*m\b", flat)
+        if m:
+            d["sea"], d["ap"], d["mkt"] = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    m = re.search(r"(\d)\s*(?:wc\s*)?banyo|(\d)\s*bath|(\d)\s*ванн", flat, re.I)
+    if m:
+        d["ba"] = int(next(g for g in m.groups() if g))
+    year = datetime.datetime.now().year
+    m = re.search(r"yap[iıİ]m\s+y[iıİ]l[iıİ]\D{0,4}(\d{4})|year\s+built\D{0,4}(\d{4})|год\s+постройки\D{0,4}(\d{4})", flat, re.I)
+    if m:
+        built = int(next(g for g in m.groups() if g))
+        if 1950 < built <= year + 3:
+            d["age"] = max(0, year - built)
+    m = re.search(r"bina\s+ya[sş][iıİ]\D{0,4}(\d{1,2})\b", flat, re.I)
+    if m and "age" not in d:
+        d["age"] = int(m.group(1))
+    m = re.search(r"aidat\D{0,12}?(\d{1,3}(?:[.,]\d{3})+|\d{1,5})\s*(€|euro|eur|tl\b|₺)?", flat, re.I)
+    if m:
+        v, cur = int(re.sub(r"\D", "", m.group(1))), (m.group(2) or "").lower()
+        d["aid"] = round(v / TRY_PER_EUR) if (cur in ("tl", "₺") or (not cur and v >= 300)) else v
+    m = re.search(r"(?:pas\s+f[iİıI]yat[iı]|f[iİıI]yat[iı]?|price|цена)\D{0,8}?(?<![\d+])(\d{1,3}(?:[ .,]\d{3})+|\d{4,9})\s*(€|euro|eur|₺|tl\b|try\b)", flat, re.I)
+    if m:
+        v, cur = int(re.sub(r"\D", "", m.group(1))), m.group(2).lower()
+        if cur in ("€", "euro", "eur"):
+            d["p"] = v if v >= 5000 else 0
+        elif v >= 200000:
+            d["tl"], d["p"] = v, round(v / TRY_PER_EUR / 100) * 100
+    if re.search(r"\bvilla\b|\bvila\b|müstakil|вилла", flat, re.I):
+        d["tp"] = "v"
+    if re.search(r"kiral[iıİI]k", flat, re.I) and not re.search(r"sat[iıİI]l[iıİI]k", flat, re.I):
+        d["rent"] = True
+    if re.search(r"sat[iıİI]ld[iıİI]\b|\bsold\b|продан", flat, re.I):
+        d["sold"] = True
+    ft = []
+    for rx, code in FEAT:
+        if re.search(rx, flat, re.I):
+            if code == "pool_any":
+                if "pool" in ft or "pool_in" in ft:
+                    continue
+                code = "pool"
+            ft.append(code)
+    if ft:
+        d["ft"] = ft
+    return d
+
+
+def apply_details(x, det):
+    for k in ("m", "fl"):
+        if det.get(k):
+            x[k] = det[k]
+    if not x["r"] and det.get("r"):
+        x["r"] = det["r"]
+    if x["d"] == "Alanya" and det.get("d"):
+        x["d"] = det["d"]
+    if not x["p"] and det.get("p"):
+        x["p"], x["tl"] = det["p"], det.get("tl", 0)
+    if det.get("tp") == "v":
+        x["tp"] = "v"
+
+
 def collect_drive(s):
     out, seen = [], set()
     fid = re.search(r"/folders/([\w-]+)", s["url"]).group(1)
@@ -143,13 +315,32 @@ def collect_drive(s):
         print("  folder", f, "->", len(items), "entries |", " / ".join(trail)[:70])
         imgs = ["https://drive.google.com/thumbnail?id=" + i + "&sz=w800"
                 for i, n, fo in items if not fo and n.lower().endswith(IMG)][:5]
-        if trail and imgs:  # a folder with photos = one property
+        docs = [(i, n) for i, n, fo in items if not fo and n.lower().endswith(DOCS)][:3]
+        if trail and (imgs or docs):  # a folder with photos or a description = one property
             x = parse_line(" / ".join(reversed(trail)), "", False)
             if x["rent"]:
                 print("    skipped (rent):", " / ".join(trail[-2:])[:60])
             else:
-              out.append(mk(s["name"], s["name"], s.get("tel", ""), x, "drive:" + f,
-                          "https://drive.google.com/drive/folders/" + f, imgs, " / ".join(trail[-2:])))
+                det = {}
+                for did, dname in docs:
+                    for k, v in parse_details(read_doc(did, dname)).items():
+                        if k == "ft":
+                            det["ft"] = sorted(set(det.get("ft", [])) | set(v))
+                        elif k not in det:
+                            det[k] = v
+                    time.sleep(0.4)
+                if det.get("rent") or det.get("sold"):
+                    print("    skipped (rent/sold):", " / ".join(trail[-2:])[:60])
+                    det = None
+                else:
+                    apply_details(x, det)
+                    item = mk(s["name"], s["name"], s.get("tel", ""), x, "drive:" + f,
+                              "https://drive.google.com/drive/folders/" + f, imgs,
+                              det.get("title") or " / ".join(trail[-2:]))
+                    item.update({k: det[k] for k in ("sea", "age", "aid", "ft", "ap", "mkt", "ba", "cd") if det.get(k)})
+                    out.append(item)
+                if docs and det:
+                    print("    details:", {k: v for k, v in det.items() if k != "ft"}, det.get("ft", []))
         for eid, name, isf in items:
             if isf and eid not in seen and len(seen) < 400 and depth < 4:
                 seen.add(eid)
