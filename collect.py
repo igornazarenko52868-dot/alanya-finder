@@ -180,6 +180,61 @@ def collect_site(s):
     return parse_text(html_to_text(get(s["url"])), s["name"], s["name"], norm_tel(s.get("tel", "")), s["url"])
 
 
+PHOTO_DIR = os.path.join(HERE, "data", "photos")
+# Listings first seen more than this many days ago are removed from the app together with their photos.
+# (The files on Google Drive are never touched.) 120 days is about 4 months.
+MAX_AGE_DAYS = 120
+RETIRED = os.path.join(HERE, "data", "retired.json")
+
+
+def get_bytes(url):
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": UA})
+        with urllib.request.urlopen(req, timeout=40) as r:
+            return r.read()
+    except Exception as e:  # noqa
+        print("  photo FAIL", url[:70], e)
+        return b""
+
+
+def is_img(b):
+    return len(b) > 2000 and (b[:2] == b"\xff\xd8" or b[:4] == b"\x89PNG" or (b[:4] == b"RIFF" and b[8:12] == b"WEBP"))
+
+
+def localize(listings):
+    """Copy photos from Google Drive into data/photos so the site can attach them when sharing."""
+    os.makedirs(PHOTO_DIR, exist_ok=True)
+    used = set()
+    for x in listings:
+        out = []
+        for u in x.get("ph", []):
+            m = re.search(r"id=([\w-]+)", u)
+            if not m:
+                out.append(u)
+                if u.startswith("data/photos/"):
+                    used.add(os.path.basename(u))
+                continue
+            name = m.group(1) + ".jpg"
+            path = os.path.join(PHOTO_DIR, name)
+            if not os.path.exists(path):
+                for src in ("https://lh3.googleusercontent.com/d/" + m.group(1) + "=w800",
+                            "https://drive.google.com/thumbnail?id=" + m.group(1) + "&sz=w800"):
+                    b = get_bytes(src)
+                    time.sleep(0.3)
+                    if is_img(b):
+                        open(path, "wb").write(b)
+                        break
+            if os.path.exists(path):
+                out.append("data/photos/" + name)
+                used.add(name)
+            else:
+                out.append(u)
+        x["ph"] = out
+    for f in os.listdir(PHOTO_DIR):
+        if f not in used:
+            os.remove(os.path.join(PHOTO_DIR, f))
+
+
 def key(x):
     if x["m"]:
         return "|".join(str(x[k]) for k in ("d", "r", "m", "fl"))
@@ -255,7 +310,27 @@ def main():
     for p in prev:
         if counts.get(p.get("src"), 1) == 0:
             cur.append(p)
-    res = finalize(merge(cur), prev)
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    merged = merge(cur)
+    try:
+        retired = json.load(open(RETIRED, encoding="utf-8"))
+    except Exception:
+        retired = {}
+    present = {key(x) for x in merged}
+    res = finalize([x for x in merged if key(x) not in retired], prev)
+    now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+    keep = []
+    for x in res:
+        if (now - datetime.datetime.strptime(x["first"], "%Y-%m-%d")).days > MAX_AGE_DAYS:
+            retired[x["key"]] = now.strftime("%Y-%m-%d")
+            print("  retired (older than %d days):" % MAX_AGE_DAYS, x.get("t") or x["d"])
+        else:
+            keep.append(x)
+    res = keep
+    # forget retired entries that are no longer in the sources at all
+    retired = {k: v for k, v in retired.items() if k in present}
+    json.dump(retired, open(RETIRED, "w", encoding="utf-8"))
+    localize(res)
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     stamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     json.dump({"updated": stamp, "listings": res}, open(OUT, "w", encoding="utf-8"), ensure_ascii=False)
