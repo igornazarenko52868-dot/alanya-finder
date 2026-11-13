@@ -186,7 +186,13 @@ def pdf_text(b):
             return ""
     import io
     r = pypdf.PdfReader(io.BytesIO(b))
-    return "\n".join((p.extract_text() or "") for p in r.pages[:3])
+    pages = []
+    for p in r.pages[:3]:
+        try:
+            pages.append(p.extract_text(extraction_mode="layout") or "")  # keeps the original line breaks
+        except TypeError:
+            pages.append(p.extract_text() or "")
+    return "\n".join(pages)
 
 
 def read_doc(fid, name):
@@ -205,6 +211,23 @@ def read_doc(fid, name):
     except Exception as e:  # noqa
         print("  cannot read", name, e)
     return ""
+
+
+BAD_LINE = re.compile(r"https?://|www\.|\.com\b|shbd\.io|t[iıİ]kla|kapora|sat[iıİ][sş]\s+yetk|wep\s+sayf|sahibinden|hepsi\s*emlak|ofis\s+konum|vatanda[sş]|kredi(?:ye)?\s|^\W*kod\s*\d|(?<!\d)\+?\d[\d\s\-]{8,}\d", re.I)
+PRICE_PHRASE = re.compile(r"(?:pas\s+f[iİıI]yat[iı]|f[iİıI]yat[iı]?|aidat|price|цена)\s*:?\s*\d[\d.,\s]*\s*(?:€|euro|eur|tl\b|₺)\*?", re.I)
+MONEY = re.compile(r"\d[\d.,\s]*\s*(?:€|euro|eur|tl\b|₺)", re.I)
+
+
+def build_ds(text):
+    """The agency's own description, without prices, links, phone numbers and sales boilerplate."""
+    out = []
+    for l in text.splitlines():
+        l = re.sub(r"\s+", " ", re.sub(r"^[\s●•▪]+", "", l)).strip()
+        l = MONEY.sub("", PRICE_PHRASE.sub("", l)).strip(" *:-")
+        if len(l) < 2 or re.fullmatch(r"[\d\W]{1,4}", l) or BAD_LINE.search(l) or l in out:
+            continue
+        out.append(l)
+    return "\n".join(out)[:1500]
 
 
 def parse_details(text):
@@ -303,6 +326,9 @@ def parse_details(text):
             ft.append(code)
     if ft:
         d["ft"] = ft
+    ds = build_ds(text)
+    if ds:
+        d["ds"] = ds
     return d
 
 
@@ -355,7 +381,7 @@ def collect_drive(s):
                     item = mk(s["name"], s["name"], s.get("tel", ""), x, "drive:" + f,
                               "https://drive.google.com/drive/folders/" + f, imgs,
                               det.get("title") or " / ".join(trail[-2:]))
-                    item.update({k: det[k] for k in ("sea", "age", "aid", "ft", "ap", "mkt", "ba", "cd") if det.get(k)})
+                    item.update({k: det[k] for k in ("sea", "age", "aid", "ft", "ap", "mkt", "ba", "cd", "ds") if det.get(k)})
                     out.append(item)
                 if docs and det:
                     print("    details:", {k: v for k, v in det.items() if k != "ft"}, det.get("ft", []))
