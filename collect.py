@@ -11,6 +11,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "data", "listings.json")
 KD = ["Mahmutlar", "Kestel", "Oba", "Tosmur", "Cikcilli", "Çıkcılı", "Kargicak", "Kargıcak",
       "Demirtaş", "Avsallar", "Konaklı", "Payallar", "Türkler", "Okurcalar", "Merkez", "Center", "Alanya"]
+# Only listings that mention one of these places are kept (set "alanya_only": false on a source to switch this off).
+ALANYA = ["Alanya", "Mahmutlar", "Kestel", "Oba", "Tosmur", "Cikcilli", "Çıkcılı", "Kargicak", "Kargıcak", "Demirtaş",
+          "Avsallar", "Konaklı", "Payallar", "Türkler", "Okurcalar", "İncekum", "Incekum", "Kızlarpınarı", "Obagöl",
+          "Sugözü", "Şekerhane", "Hacet", "Gazipaşa"]
+AL_RX = re.compile(r"(?<![^\W\d_])(?:" + "|".join(re.escape(k) for k in ALANYA) + r")(?![^\W\d_])", re.I)
+
+
+def is_alanya(trail, det):
+    return bool(det and det.get("al")) or bool(AL_RX.search(" ".join(trail)))
+
+
 PAL = ["#0e5c7a,#14a3a0", "#1c6e5c,#7bc47f", "#254a73,#4b8fc4", "#5b3f8c,#b37fd1", "#7a4a1e,#e0a458", "#8a2f4a,#e2778f"]
 IMG = (".jpg", ".jpeg", ".png", ".webp")
 DOCS = (".pdf", ".docx", ".txt")
@@ -200,6 +211,8 @@ def parse_details(text):
         return {}
     flat = re.sub(r"\s+", " ", text)
     d = {}
+    if AL_RX.search(flat):
+        d["al"] = True
     m = re.search(r"📍\s*([^\W\d_]+)", flat)
     if m:
         d["d"] = m.group(1)
@@ -331,6 +344,9 @@ def collect_drive(s):
                     time.sleep(0.4)
                 if det.get("rent") or det.get("sold"):
                     print("    skipped (rent/sold):", " / ".join(trail[-2:])[:60])
+                    det = None
+                elif s.get("alanya_only", True) and not is_alanya(trail, det):
+                    print("    skipped (not Alanya):", " / ".join(trail[-2:])[:60])
                     det = None
                 else:
                     apply_details(x, det)
