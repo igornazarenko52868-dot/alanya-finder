@@ -94,7 +94,7 @@ svg text{fill:var(--ink);font-family:inherit}
 <label><span data-t="komp"></span><input id="k-p" type="number" step="0.5" inputmode="decimal"></label>
 <label><span data-t="komf"></span><input id="k-f" type="number" step="100" inputmode="numeric"></label>
 <button class="btn main" id="pr"></button><button class="btn" id="cp"></button>
-</div><p class="meta" data-t="pickh"></p><div class="row"><label><span data-t="clsel"></span><select id="cl-s"></select></label><label><span data-t="clnew"></span><input id="cl-n"></label><button class="btn main" id="cl-a" data-t="cladd"></button><button class="btn" id="cl-d" data-t="cldel"></button></div><div class="row" style="margin-top:8px"><label><span data-t="bkt"></span><input id="bk-t"></label><label><span data-t="bks"></span><input id="bk-s2"></label><label><span data-t="mail"></span><input id="a-mail" type="email"></label><button class="btn main" id="bk-o" data-t="bkopen"></button></div></div>
+</div><p class="meta" data-t="pickh"></p><div class="row"><label><span data-t="clsel"></span><select id="cl-s"></select></label><label><span data-t="clnew"></span><input id="cl-n"></label><button class="btn main" id="cl-a" data-t="cladd"></button><button class="btn" id="cl-d" data-t="cldel"></button></div><div class="row" style="margin-top:8px"><label><span data-t="bkt"></span><input id="bk-t"></label><label><span data-t="bks"></span><input id="bk-s2"></label><label><span data-t="mail"></span><input id="a-mail" type="email"></label><button class="btn main" id="bk-o" data-t="bkopen"></button></div><div class="row" style="margin-top:8px"><label><span data-t="shn"></span><select id="sh-n"><option>0</option><option selected>1</option><option>2</option><option>3</option></select></label><button class="btn main" id="sh-all" data-t="shall"></button><button class="btn" id="sh-txt" data-t="shtxt"></button></div></div>
 <h2 id="pk-h" style="margin:4px 0"></h2>
 <div class="grid" id="pk"></div>
 </section>
@@ -464,7 +464,7 @@ document.addEventListener('click',function(e){var b=e.target.closest('button');i
 if(q.mv){var a=q.mv.split(','),i=S.fav.indexOf(+a[0]),j=i+(+a[1]);if(i>-1&&j>=0&&j<S.fav.length){var w=S.fav[i];S.fav[i]=S.fav[j];S.fav[j]=w;save();view()}}
 else if(q.pr){var k=S.fav.indexOf(+q.pr);if(k>-1){S.fav.splice(k,1);save();view()}}});
 document.addEventListener('change',function(e){if(e.target.dataset&&e.target.dataset.s&&+e.target.value===3)view()});
-function photoFiles(x){var u=(x.ph||[]).filter(function(p){return !/^https?:/.test(p)}).slice(0,4);
+function photoFiles(x){var u=(x.ph||[]).filter(function(p){return !/^https?:/.test(p)}).slice(0,10);
 return Promise.all(u.map(function(p,i){return fetch(p).then(function(r){return r.blob()}).then(function(b){return new File([b],'photo'+(i+1)+'.jpg',{type:b.type||'image/jpeg'})}).catch(function(){return null})})).then(function(a){return a.filter(Boolean)})}
 function share(id,btn){var x=D.filter(function(z){return z.id==id})[0];if(!x)return;var c=act(),n=S.fav.indexOf(x.id)+1,s=(c.name&&n?c.name+'\n':'')+clientText(x,n),o=btn.textContent;btn.textContent='…';
 photoFiles(x).then(function(fs){btn.textContent=o;var d={title:t('title'),text:s};
@@ -526,6 +526,15 @@ Object.assign(X,{mtr:'м|m|m'});function mm(n){return n+' '+t('mtr')}
 function autoDesc(x){var a=[x.r,x.m?x.m+' '+t('sqm'):'',x.fl?t('fl')+' '+x.fl:'',x.sea?t('sea')+' '+mm(x.sea):'',x.age?t('age')+' '+x.age+' '+t('yr'):''].filter(Boolean).join(', '),
 f=fts(x).map(function(c){return t('ft_'+c)}).join(', ');if(!a&&!f)return '';
 return [dn(x.d)+(a?': '+a+'.':'.'),f?t('binf')+': '+f+'.':''].filter(Boolean).join(' ').replace(/\.\./g,'.')}
+Object.assign(X,{shn:'Фото на объект|Her ilana fotoğraf|Photos per listing',shall:'Отправить всю подборку|Tüm seçkiyi gönder|Send the whole picks',shtxt:'Только текст в WhatsApp|WhatsApp’ta sadece metin|Text only to WhatsApp'});
+function pickItems(){return S.fav.map(function(id){return D.filter(function(z){return z.id===id})[0]}).filter(Boolean)}
+function pickText(){var c=act();return (c.name?c.name+'\n':'')+(S.ag.n?S.ag.n+(S.ag.p?' '+S.ag.p:'')+'\n':'')+'\n'+pickItems().map(function(x,i){return clientText(x,i+1)}).join('\n\n')}
+$('sh-txt').onclick=function(){if(!pickItems().length)return;window.open('https://wa.me/?text='+encodeURIComponent(pickText()),'_blank')};
+$('sh-all').onclick=function(){var it=pickItems(),b=this,o=b.textContent,n=+$('sh-n').value||0;if(!it.length)return;b.textContent='…';var s=pickText(),jobs=[];
+it.forEach(function(x,i){(x.ph||[]).filter(function(p){return !/^https?:/.test(p)}).slice(0,n).forEach(function(p,k){jobs.push(fetch(p).then(function(r){return r.blob()}).then(function(bl){return new File([bl],(i+1)+'-'+(k+1)+'.jpg',{type:bl.type||'image/jpeg'})}).catch(function(){return null}))})});
+Promise.all(jobs.slice(0,30)).then(function(fs){fs=fs.filter(Boolean);b.textContent=o;var d={title:t('title'),text:s};
+if(fs.length&&navigator.canShare&&navigator.canShare({files:fs}))d.files=fs;
+if(navigator.share)navigator.share(d).catch(function(){});else if(navigator.clipboard)navigator.clipboard.writeText(s).then(function(){flash(b,'copied','shall')})})};
 labels();
 fetch('data/listings.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
 LOADED=1;if(!j||!j.listings){prep();labels();return}AUTO=j.listings;X.note=X.note.split('|').map(function(s){return s+' · '+j.updated}).join('|');prep();labels()}).catch(function(){LOADED=1;prep();labels()});
