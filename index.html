@@ -213,8 +213,8 @@ var DEMO=[
 ];
 var S={fav:[],nt:{},al:[],src:[],ag:{n:"",p:""},tg:"",ls:[],demo:0};
 try{var sv=JSON.parse(localStorage.getItem("af2")||"{}");for(var k in sv)S[k]=sv[k];if(sv.L)L=sv.L;if(sv.C)C=sv.C;if(sv.R)R=sv.R}catch(e){}
-S.ls=S.ls||[];var D=[],avg={},AUTO=[];
-function prep(){var base=AUTO.concat(S.ls);D=(S.demo||!base.length)?base.concat(DEMO):base;avg={};var c={};
+S.ls=S.ls||[];var D=[],avg={},AUTO=[],LOADED=0;
+function prep(){var base=AUTO.concat(S.ls);D=(S.demo||(LOADED&&!base.length))?base.concat(DEMO):base;avg={};var c={};
 D.forEach(function(x){x.p=Math.min.apply(null,x.ag.map(function(a){return a[1]}));x.pm=x.m&&x.p?x.p/x.m:0;if(S.ls.indexOf(x)>-1)x.my=1;if(x.pm)(c[x.d]=c[x.d]||[]).push(x.pm)});
 for(var k in c)avg[k]=c[k].reduce(function(a,b){return a+b})/c[k].length}
 prep();
@@ -227,7 +227,7 @@ a.sort(function(x,y){return so==="1"?(x.p||1e12)-(y.p||1e12):so==="2"?y.p-x.p:so
 function card(x){
 var g=x.c.split(","),n=dn(x.d),fv=S.fav.indexOf(x.id)>-1,nt=S.nt[x.id]||{s:0,n:""},st=ta("st");
 var dv=Math.round((x.pm/avg[x.d]-1)*100),mk=!x.pm||dv===0||D.filter(function(y){return y.d===x.d}).length<2?"":(dv<0?'<span class="mk lo">'+t("below")+(-dv)+'%</span>':'<span class="mk hi">'+t("above")+dv+'%</span>');
-return '<article class="card"><div class="ph" data-id="'+x.id+'" style="background:linear-gradient(135deg,'+g[0]+','+g[1]+')">'+pic(x)+'<div class="bd">'+(x.nw?'<b>'+t("nw")+'</b>':'')+(x.old>x.p?'<b class="dn">'+t("dp")+'</b>':'')+'</div><span style="margin-top:auto">'+n+' · '+x.r+'</span><button class="fav" data-f="'+x.id+'" aria-pressed="'+fv+'">'+(fv?"♥":"♡")+'</button>'+nav(x)+'</div><div class="body">'+(x.t?'<b>'+x.t.replace(/</g,"&lt;")+'</b>':'')+'<div class="price">'+(x.p?money(x.p):t("ask"))+(x.tl?'<span class="old" style="text-decoration:none">≈ '+x.tl.toLocaleString("tr-TR")+' ₺</span>':'')+(x.old>x.p?'<span class="old">'+money(x.old)+'</span>':'')+'</div>'+ckl(x)+'<div>'+t("ppm")+': <b>'+(x.pm?money(x.pm):"—")+'</b> '+mk+'</div><div class="kv"><div><span>'+t("sea")+'</span> '+(x.sea?x.sea+" m":"—")+'</div><div><span>'+t("fl")+'</span> '+(x.fl||"—")+'</div><div><span>'+t("age")+'</span> '+(x.age||"—")+(x.age?' '+t("yr"):'')+'</div><div><span>'+t("aid")+'</span> '+(x.aid?money(x.aid):"—")+'</div><div><span>'+t("sqm")+'</span> '+(x.m||"—")+'</div><div><span>'+t("deed")+'</span> '+t(x.dd==="t"?"tapu":"proj")+'</div></div>'+chips(x)+(x.ds?'<p style="margin:0;font-size:.9rem">'+esc(x.ds.slice(0,500))+'</p>':'')+'<span class="pill">'+t(x.o==="o"?"own":"agt")+'</span>'+(x.tp==="v"?'<span class="pill">'+t("tpv")+'</span>':'')+who(x)+(x.ag.length>1?'<div class="ags">'+t("ags")+x.ag.map(function(a){return a[0]+" "+money(a[1])}).join(" · ")+'</div>':'')+'<div class="noprint"><select data-s="'+x.id+'">'+st.map(function(s,i){return '<option value="'+i+'"'+(i==nt.s?" selected":"")+'>'+s+'</option>'}).join("")+'</select><input style="margin-top:6px" data-n="'+x.id+'" placeholder="'+t("nt")+'" value="'+nt.n.replace(/"/g,"&quot;")+'"></div>'+acts(x)+'</div></article>'}
+return '<article class="card"><div class="ph" data-id="'+x.id+'" style="background:linear-gradient(135deg,'+g[0]+','+g[1]+')">'+pic(x)+'<div class="bd">'+(x.nw?'<b>'+t("nw")+'</b>':'')+(x.old>x.p?'<b class="dn">'+t("dp")+'</b>':'')+'</div><span style="margin-top:auto">'+n+' · '+x.r+'</span><button class="fav" data-f="'+x.id+'" aria-pressed="'+fv+'">'+(fv?"♥":"♡")+'</button>'+nav(x)+'</div><div class="body">'+(x.t?'<b>'+x.t.replace(/</g,"&lt;")+'</b>':'')+'<div class="price">'+(x.p?money(x.p):t("ask"))+(x.tl?'<span class="old" style="text-decoration:none">≈ '+x.tl.toLocaleString("tr-TR")+' ₺</span>':'')+(x.old>x.p?'<span class="old">'+money(x.old)+'</span>':'')+'</div>'+ckl(x)+'<div>'+t("ppm")+': <b>'+(x.pm?money(x.pm):"—")+'</b> '+mk+'</div><div class="kv"><div><span>'+t("sea")+'</span> '+(x.sea?x.sea+" m":"—")+'</div><div><span>'+t("fl")+'</span> '+(x.fl||"—")+'</div><div><span>'+t("age")+'</span> '+(x.age||"—")+(x.age?' '+t("yr"):'')+'</div><div><span>'+t("aid")+'</span> '+(x.aid?money(x.aid):"—")+'</div><div><span>'+t("sqm")+'</span> '+(x.m||"—")+'</div><div><span>'+t("deed")+'</span> '+t(x.dd==="t"?"tapu":"proj")+'</div></div>'+chips(x)+((x.ds||autoDesc(x))?'<p style="margin:0;font-size:.9rem">'+esc((x.ds||autoDesc(x)).slice(0,500))+'</p>':'')+'<span class="pill">'+t(x.o==="o"?"own":"agt")+'</span>'+(x.tp==="v"?'<span class="pill">'+t("tpv")+'</span>':'')+who(x)+(x.ag.length>1?'<div class="ags">'+t("ags")+x.ag.map(function(a){return a[0]+" "+money(a[1])}).join(" · ")+'</div>':'')+'<div class="noprint"><select data-s="'+x.id+'">'+st.map(function(s,i){return '<option value="'+i+'"'+(i==nt.s?" selected":"")+'>'+s+'</option>'}).join("")+'</select><input style="margin-top:6px" data-n="'+x.id+'" placeholder="'+t("nt")+'" value="'+nt.n.replace(/"/g,"&quot;")+'"></div>'+acts(x)+'</div></article>'}
 function opts(el,arr,cur){$(el).innerHTML=arr.map(function(a){return '<option value="'+a[0]+'">'+a[1]+'</option>'}).join("");$(el).value=cur||""}
 function labels(){
 document.documentElement.lang=L;document.title=t("title");$("h1").textContent=t("title");$("tag").textContent=t("tag");$("note").textContent=t("note");
@@ -247,7 +247,7 @@ function view(){
 ["s","f","m","c","a","r","d"].forEach(function(i){$("v-"+i).hidden=TAB!==i});
 document.querySelectorAll("#tabs button").forEach(function(b){b.setAttribute("aria-selected",b.dataset.tab===TAB)});
 var a=list();$("count").textContent=t("found")+a.length+" · "+t("pk")+": "+(act().name||t("cl0"));
-$("grid").innerHTML=a.length?a.map(card).join(""):'<div class="empty">'+t("none")+'</div>';
+$("grid").innerHTML=a.length?a.map(card).join(""):'<div class="empty">'+(LOADED?t("none"):'…')+'</div>';
 var pk=S.fav.map(function(id){return D.filter(function(z){return z.id===id})[0]}).filter(Boolean);
 pkh();
 $("pk").innerHTML=pk.length?pk.map(function(x,i){return card(cv(x,i+1))}).join(""):'<div class="empty">'+t("pke")+'</div>';
@@ -523,9 +523,12 @@ function bkfill(){var c=act(),a=document.activeElement.id;if(a!=='bk-t')$('bk-t'
 $('bk-t').oninput=function(){act().title=this.value;save()};$('bk-s2').oninput=function(){act().sub=this.value;save()};$('a-mail').oninput=function(){S.mail=this.value;save()};$('bk-o').onclick=bkOpen;
 document.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;if(b.dataset.bkp)window.print();if(b.dataset.bkc){$('bk').hidden=true;document.body.classList.remove('bkon')}});
 Object.assign(X,{mtr:'м|m|m'});function mm(n){return n+' '+t('mtr')}
+function autoDesc(x){var a=[x.r,x.m?x.m+' '+t('sqm'):'',x.fl?t('fl')+' '+x.fl:'',x.sea?t('sea')+' '+mm(x.sea):'',x.age?t('age')+' '+x.age+' '+t('yr'):''].filter(Boolean).join(', '),
+f=fts(x).map(function(c){return t('ft_'+c)}).join(', ');if(!a&&!f)return '';
+return [dn(x.d)+(a?': '+a+'.':'.'),f?t('binf')+': '+f+'.':''].filter(Boolean).join(' ').replace(/\.\./g,'.')}
 labels();
 fetch('data/listings.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
-if(!j||!j.listings)return;AUTO=j.listings;X.note=X.note.split('|').map(function(s){return s+' · '+j.updated}).join('|');prep();labels()}).catch(function(){});
+LOADED=1;if(!j||!j.listings){prep();labels();return}AUTO=j.listings;X.note=X.note.split('|').map(function(s){return s+' · '+j.updated}).join('|');prep();labels()}).catch(function(){LOADED=1;prep();labels()});
 </script>
 </body>
 </html>
