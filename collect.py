@@ -25,6 +25,8 @@ def is_alanya(trail, det):
 PAL = ["#0e5c7a,#14a3a0", "#1c6e5c,#7bc47f", "#254a73,#4b8fc4", "#5b3f8c,#b37fd1", "#7a4a1e,#e0a458", "#8a2f4a,#e2778f"]
 IMG = (".jpg", ".jpeg", ".png", ".webp")
 DOCS = (".pdf", ".docx", ".txt")
+# How many photos to keep per property. More photos = more storage in the repository (about 0.1 MB each).
+MAX_PHOTOS = 10
 PRICE = re.compile(r"(?<![\d+])(\d{1,3}(?:[ .,]\d{3})+|\d{4,7})\s*(?:€|euro|eur)", re.I)
 # Rate used to convert prices written in Turkish lira (TL). Change it when the rate moves.
 TRY_PER_EUR = 56
@@ -327,7 +329,7 @@ def collect_drive(s):
         time.sleep(0.4)
         print("  folder", f, "->", len(items), "entries |", " / ".join(trail)[:70])
         imgs = ["https://drive.google.com/thumbnail?id=" + i + "&sz=w800"
-                for i, n, fo in items if not fo and n.lower().endswith(IMG)][:5]
+                for i, n, fo in items if not fo and n.lower().endswith(IMG)][:MAX_PHOTOS]
         docs = [(i, n) for i, n, fo in items if not fo and n.lower().endswith(DOCS)][:3]
         if trail and (imgs or docs):  # a folder with photos or a description = one property
             x = parse_line(" / ".join(reversed(trail)), "", False)
