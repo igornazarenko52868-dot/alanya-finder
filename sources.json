@@ -10,6 +10,7 @@
     {"name": "Drive 4", "type": "drive", "url": "https://drive.google.com/drive/folders/1GyN-DfebpEGYEhEozwLpX2bSXwBCjpI8", "tel": ""},
     {"name": "Drive 6", "type": "drive", "url": "https://drive.google.com/drive/folders/1F3rwt0HNB9oGvYDNr6ghM2_4Nb3SAAFt", "tel": ""},
     {"name": "Global Estate", "type": "doc", "url": "https://docs.google.com/document/d/1DWvVia46_XHMKGhjmu_kgVlXw8Dqrm67fp7skFHrask/edit", "tel": ""},
-    {"name": "Chetinkaya Group (trust-united.com)", "type": "site", "url": "https://www.trust-united.com/", "tel": ""}
+    {"name": "Chetinkaya Group (trust-united.com)", "type": "site", "url": "https://www.trust-united.com/", "tel": ""},
+    {"name": "DİN BOLİG ALANYA", "type": "drive", "url": "https://drive.google.com/drive/folders/1Akbf5Afl6bpgYbvzFJC-uUbV4vJeKXGd", "tel": ""}
   ]
 }
